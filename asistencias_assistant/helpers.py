@@ -295,10 +295,10 @@ def transformar_ausencias_a_dict(ausencias,es_viaticos=False) -> dict:
         oficina = row["oficina"]
         nro_motivo = row["nro_motivo"]
         motivo = row["motivo"]
-        if int(row["dia_fin"]) == 30:
-            dias = list(range(int(row["dia_inicio"]), int(row["dia_fin"]) + 2))
-        else:
-            dias = list(range(int(row["dia_inicio"]), int(row["dia_fin"]) + 1))
+        #if int(row["dia_fin"]) == 30:
+        #    dias = list(range(int(row["dia_inicio"]), int(row["dia_fin"]) + 2))
+        #else:
+          dias = list(range(int(row["dia_inicio"]), int(row["dia_fin"]) + 1))
 
         legajo_dict[legajo]["empleado"] = nombre
         legajo_dict[legajo]["oficina"] = oficina
@@ -316,4 +316,5 @@ def lista_a_string(lista):
     s += str(lista[0])
     for x in lista[1:]:
         s += ", " + str(x)
+
     return s 
