@@ -158,6 +158,7 @@ def reportar_legajos(df_hhee_norm, df_legajos_oficina_original, oficinas):
     if len(no_encontrados) > 0:
         st.write("Estos son los legajos que no pertenecen a la oficina de la planilla:")
         for legajo in no_encontrados:
-            st.write("""-""" + legajo + " no pertenece a la/s oficina/s que se incluyen en la planilla de horas extras.")
+            st.write("""-""" + str(legajo) + " no pertenece a la/s oficina/s que se incluyen en la planilla de horas extras.")
     else:
+
         st.write("Los legajos coinciden con el número de la oficina correspondiente")
