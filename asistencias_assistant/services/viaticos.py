@@ -4,6 +4,7 @@ import re
 import difflib
 import calendar
 import json
+import numpy as np
 
 from pathlib import Path
 from datetime import datetime
@@ -14,7 +15,6 @@ from dateutil.relativedelta import relativedelta
 
 def obtener_dias_feriados(anio: int, mes: int) -> list[int]:
     BASE_DIR = Path(__file__).resolve().parent.parent
-    print(Path(__file__).resolve())
     ruta_feriados = BASE_DIR / "feriados.txt"
 
     with open(ruta_feriados, encoding="utf-8") as f: 
@@ -80,7 +80,6 @@ def buscar_idx_encabezado(df_planilla: pd.DataFrame,
     return idx_encabezado
 
 #NO COPIAR
-
 def obtener_hoja_planilla(excel) -> str:
     
     """
@@ -143,7 +142,7 @@ def normalizar_planilla_viaticos(planilla: pd.DataFrame) -> pd.DataFrame:
     # Damos forma al df
     df = df.reset_index(drop=True)
     df = df.dropna(how="all")
-    df = df.iloc[:,:34]
+    df = df.iloc[:,:33]
     dias_cols = [i+1 for i in range(31)]
     nuevas_cols = ["legajo", "empleado"] + dias_cols
     df.columns = nuevas_cols
@@ -159,10 +158,9 @@ def normalizar_planilla_viaticos(planilla: pd.DataFrame) -> pd.DataFrame:
     df["legajo"] = df["legajo"].astype(str) #4. transformamos a string
 
     #Como las columnas que quedan que podrían tener na son de dias sin viaticos, se ponen en cero
-    df[df.isna()] = 0
-
-
     df[dias_cols] = df[dias_cols].apply(pd.to_numeric, errors = 'coerce', downcast = 'integer')
+
+    df = df.fillna(0)
 
     return df
 
@@ -300,14 +298,11 @@ def modificar_reportar_viaticos_en_ausencia(ausencias,planilla_viaticos):
 
     for idx, row in viaticos.iterrows():
         legajo = row["legajo"]
-
         for dia in dias:
             valor = row[dia]
-
             if valor > 20:
                 # corregir dataframe
                 viaticos.at[idx, dia] = 20
-
                 # registrar inconsistencia
                 inconsistencias_ausencias[legajo].append(
                     (dia, "MAYOR A 20 UNIDADES")
@@ -324,19 +319,32 @@ def modificar_reportar_viaticos_en_ausencia(ausencias,planilla_viaticos):
                     dias_findes +
                     dias_feriados
                 ))
-    viaticos[dias_no_habiles] = 0
+
+    for idx, row in viaticos.iterrows():
+        legajo = row["legajo"]
+        for dia in dias_no_habiles:
+            valor = row[dia]
+            if valor > 0:
+                # corregir dataframe
+                viaticos.at[idx, dia] = 0
+                # registrar inconsistencia
+                inconsistencias_ausencias[legajo].append(
+                    (dia, "DIA NO HABIL")
+                )
 
     st.write("Se pusieron en cero todos los viáticos que caen en día no hábil. Estos días son: " + lista_a_string(dias_no_habiles))
+    
+    dict_legajo_empleado = viaticos.set_index("legajo")["empleado"].to_dict()
 
     if len(inconsistencias_ausencias) > 0:
         st.write("Se anularon horas extras para los siguientes legajos por motivo de ausencia.")
-        s = ""
         for legajo in inconsistencias_ausencias:
             inconsistencias_legajo = inconsistencias_ausencias[legajo]
-            s += "* Empleado " + ausencias[legajo]["empleado"] + " - " + legajo + " se halló:"
-            for dia, motivo in inconsistencias_legajo:
-                s += "** " + f"{dia} | {motivo}"
-        st.markdown(s)
+            with st.expander(f"\n* **Empleado {dict_legajo_empleado[legajo]} - {legajo}**\n"):
+                s = ""
+                for dia, motivo in inconsistencias_legajo:
+                    s += f"    - {dia}/{mes}/{anio} | {motivo}\n"   
+                st.markdown(s)
     
     return viaticos
 
