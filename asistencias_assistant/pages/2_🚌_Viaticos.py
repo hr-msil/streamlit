@@ -9,6 +9,8 @@ import services.viaticos as vi
 
 st.set_page_config(page_title="Viáticos", page_icon="🚌", layout = 'wide')
 
+st.markdown("**Versión beta: cualquier cosa rara que encuentres, no dudes en reportarla!**")
+
 st.markdown("Subí la **planilla de viáticos**.")
 archivo_planilla = st.file_uploader("", type = 'xls', accept_multiple_files = False, key = "archivo_planilla")
 
@@ -61,4 +63,5 @@ if archivo_planilla and archivo_legajos and archivo_ausencias and nombre_archivo
         file_name=f"planilla_viaticos_{nombre_archivo}.xlsx",
         mime="application/vnd.ms-excel",
         icon=":material/download:",
+
     )
