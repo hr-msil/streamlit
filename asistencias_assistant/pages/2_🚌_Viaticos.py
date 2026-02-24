@@ -56,7 +56,7 @@ if archivo_planilla and archivo_legajos and archivo_ausencias and nombre_archivo
         planilla_viaticos_pos.to_excel(writer, sheet_name=f'planilla_viaticos_{nombre_archivo}', index=True)
     buffer.seek(0)
     st.download_button(
-        label="Descargar resultados",
+        label="Descargar planilla final",
         data=buffer,
         file_name=f"planilla_viaticos_{nombre_archivo}.xlsx",
         mime="application/vnd.ms-excel",
