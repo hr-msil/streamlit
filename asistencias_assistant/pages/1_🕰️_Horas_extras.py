@@ -104,44 +104,44 @@ with tab2:
 with tab3:
 
     st.subheader("📊 Variación intermensual")
-    st.markdown("1️⃣ Subí los archivos correspondientes al _mes anterior_. En caso de tener dos liquidaciones, subí ambos juntos.")
-    st.markdown("**Camino:** InfoSueldos > Informes Liquidación > Liquid. por Ofic. y Rango de Cpto. | **Formato:** Excel Extended (no tabular) | Sin restricciones salvo el mes de liquidación.")
-    archivos_1 = st.file_uploader("", type=["xls"], key="archivo1", accept_multiple_files=True)
-    cant_mes_anterior = len(archivos_1)
+    #st.markdown("1️⃣ Subí los archivos correspondientes al _mes anterior_. En caso de tener dos liquidaciones, subí ambos juntos.")
+    #st.markdown("**Camino:** InfoSueldos > Informes Liquidación > Liquid. por Ofic. y Rango de Cpto. | **Formato:** Excel Extended (no tabular) | Sin restricciones salvo el mes de liquidación.")
+    #archivos_1 = st.file_uploader("", type=["xls"], key="archivo1", accept_multiple_files=True)
+    #cant_mes_anterior = len(archivos_1)
     
     st.divider()
 
-    st.markdown("2️⃣ Subí los archivos correspondientes al _mes actual_. En caso de tener dos liquidaciones, sube ambos juntos.")
+    st.markdown("1️⃣ Subí los archivos correspondientes al _mes actual_. En caso de tener dos liquidaciones, sube ambos juntos.")
     st.markdown("**Camino:** InfoSueldos > Informes Liquidación > Liquid. por Ofic. y Rango de Cpto. | **Formato:** Excel Extended (no tabular) | Sin restricciones salvo el mes de liquidación.")
 
     archivos_2 = st.file_uploader("", type=["xls"], key="archivo2",accept_multiple_files=True)
     cant_mes_actual = len(archivos_2)
 
     # --- Cuando ambos archivos son subidos ---
-    if archivos_1 and archivos_2:
+    if archivos_2:
         
         st.success("Archivos cargados correctamente.")
 
-        dfs_1 = []
+        #dfs_1 = []
         dfs_2 = []
 
-        for archivo_1 in archivos_1:
-            df_1 = pd.read_excel(archivo_1, engine='xlrd')
-            dfs_1.append(df_1)
+        #for archivo_1 in archivos_1:
+        #    df_1 = pd.read_excel(archivo_1, engine='xlrd')
+        #    dfs_1.append(df_1)
 
         for archivo_2 in archivos_2:
             df_2 = pd.read_excel(archivo_2,engine='xlrd')
             dfs_2.append(df_2)
         
-        for i,df in enumerate(dfs_1):
-            df.columns =  ["Muni", "Legajo", "Nombre", "Liq","Base",
-                    "Cant horas","Valor por hora","Saporte",
-                    "Fecha","Valor total"]
+        #for i,df in enumerate(dfs_1):
+        #    df.columns =  ["Muni", "Legajo", "Nombre", "Liq","Base",
+        #            "Cant horas","Valor por hora","Saporte",
+        #            "Fecha","Valor total"]
             
-            if i == 0:
-                mes_anterior = v_mam.limpiar(df)
-            else:
-                v_mam.agregar_liquidacion_extra(mes_anterior, df)
+        #    if i == 0:
+        #        mes_anterior = v_mam.limpiar(df)
+        #    else:
+        #        v_mam.agregar_liquidacion_extra(mes_anterior, df)
 
         for j,df in enumerate(dfs_2):
             df.columns = ["Muni", "Legajo", "Nombre", "Liq","Base",
@@ -153,14 +153,14 @@ with tab3:
             else:
                 v_mam.agregar_liquidacion_extra(mes_actual, df)
 
-        dataSetLimpio_mes1 = v_mam.armar_data_set(mes_anterior)
+        #dataSetLimpio_mes1 = v_mam.armar_data_set(mes_anterior)
         dataSetLimpio_mes2 = v_mam.armar_data_set(mes_actual)
 
-        v_mam.agregar_total(dataSetLimpio_mes1,dataSetLimpio_mes2)
+        #v_mam.agregar_total(dataSetLimpio_mes1,dataSetLimpio_mes2)
 
-        df_area = v_mam.unir_oficinas(dataSetLimpio_mes1,dataSetLimpio_mes2)
+        #df_area = v_mam.unir_oficinas(dataSetLimpio_mes1,dataSetLimpio_mes2)
 
-        df_personas = v_mam.unir_personas(dataSetLimpio_mes1, dataSetLimpio_mes2)
+        #df_personas = v_mam.unir_personas(dataSetLimpio_mes1, dataSetLimpio_mes2)
 
         df_area_total = v_mam.resumen_oficinas(dataSetLimpio_mes2)
 
