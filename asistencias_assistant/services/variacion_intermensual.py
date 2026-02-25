@@ -3,11 +3,35 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict
 
+
 ######################
 # Calcular variación #
 ######################  
 # 
 #Recibe dos (o más) planillas de horas extras y liquidación de dos meses distintos, el actual y el anterior
+
+oficinas_totales = [1,2,10,11,12,13,14,15,16,18,20,21,22,23,24,25,26,50,51,52,99,100,101,102,103,110,111,120,130,131,132,140,150,160,170,180,
+                    181,189,190,191,192,193,194,195,196,197,198,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,220,221,222,
+                    223,224,225,226,227,228,240,241,242,250,251,260,300,301,302,303,304,305,306,307,308,309,310,311,312,313,314,315,316,317,318,
+                    320,321,322,323,330,331,332,340,345,350,351,400,401,402,403,404,405,406,407,408,409,410,411,412,413,414,415,416,417,418,419,
+                    420,421,422,423,424,425,426,427,428,429,430,431,432,433,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,449,450,
+                    451,452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473,474,475,476,477,478,479,480,481,
+                    482,483,484,485,486,487,488,489,490,491,492,493,494,495,496,497,498,499,500,501,502,503,505,510,511,512,520,525,530,539,540,
+                    541,542,550,551,552,553,554,555,556,560,570,571,600,610,611,612,613,614,630,631,632,640,641,642,643,649,650,651,652,653,654,
+                    655,656,657,658,659,660,661,662,663,664,665,666,667,700,701,702,703,704,705,706,707,708,709,710,711,712,713,714,715,716,717,
+                    718,719,720,721,722,723,724,725,726,729,730,731,732,733,740,741,742,743,744,745,746,749,750,760,761,762,763,764,770,780,790,
+                    791,800,810,815,816,820,830,831,900,901,902,910,930,940,941,942,943,944,945,946,947,948,949,950,951,952,953,960,961,980,981,
+                    984,985,986,987,988,989,990,991,992,993,994,995,996,997,998]
+
+oficinas_totales_str = ['102','110','111','120','130','131','132','150','180','181','189','190','191','192','193','194','195','196','198',
+                        '210','220','221','222','224','226','227','228','240','250','306','305','308','308','311','320','321','330','331',
+                        '332','340','350','351','410','423','424','425','426','427','323','451','500','440','500','502','539','541','550',
+                        '551','552','553','554','555','560','570','571','600','601','602','603','604','605','606','607','608','609','610',
+                        '611','612','613','614','641','650','651','653','654','655','656','657','659','660','661','663','664','665','666',
+                        '700','703','706','710','712','713','714','720','722','723','724','725','730','740','742','743','744','750','761',
+                        '762','763','764','770','790','791','800','810','815','816','820','900','900','902','303','943','941','946','303',
+                        '305','948','960','7001','984','985','986','987','988','989','990','991','992','993','994','995','996','997','998',
+                        '941','942','943','944','945','946','947','948','949','950','951','952','953','954','955','956','957','958','959','960']
 
 #------- Funciones auxiliares -----------
 def esta_en_columna(df: pd.DataFrame, columna: str, valor):
@@ -534,11 +558,11 @@ def resumen_oficinas(df):
   df (pd.DataFrame): dataFrame del mes actual
   """
 
-  oficinas_unicas = df["Oficina"].unique()
+  oficinas_unicas = df["Oficina"].unique() #que itere sobre un array de TODAS LAS OFICINAS en caso de que no se encuentre en oficinas unicas, ponerle 0 a todas las columnas
 
   df_area_total = pd.DataFrame(columns = ["Oficina", "Total horas normales", "Total liquidado normales",
                                           "Total horas al 50", "Total liquidado al 50", "Total horas al 100",
-                                          "Total liquidado al 100"])
+                                          "Total liquidado al 100","Total horas", "Total liquidado"])
 
   oficinas = []
   total_hora_86 = []
@@ -549,27 +573,52 @@ def resumen_oficinas(df):
   total_valor_87 = []
   total_valor_89 = []
 
-  for oficina in oficinas_unicas:
+  total_hora = []
+  total_valor = []
 
-    oficinas.append(oficina) 
+  for oficina in oficinas_totales_str:
 
-    df_oficina = df[df["Oficina"] == oficina]
+    oficinas.append(oficina)
 
-    hora_86 = df_oficina["HorasExtra_86"].sum()
-    hora_87 = df_oficina["HorasExtra_87"].sum()
-    hora_89 = df_oficina["HorasExtra_89"].sum()
+    if oficina in oficinas_unicas:
 
-    valor_86 = df_oficina["Valor_86"].sum()
-    valor_87 = df_oficina["Valor_87"].sum()
-    valor_89 = df_oficina["Valor_89"].sum()
+      df_oficina = df[df["Oficina"] == oficina]
 
-    total_hora_86.append(hora_86)
-    total_hora_87.append(hora_87)
-    total_hora_89.append(hora_89)
+      hora_86 = df_oficina["HorasExtra_86"].sum()
+      hora_87 = df_oficina["HorasExtra_87"].sum()
+      hora_89 = df_oficina["HorasExtra_89"].sum()
 
-    total_valor_86.append(valor_86)
-    total_valor_87.append(valor_87)
-    total_valor_89.append(valor_89)
+      valor_86 = df_oficina["Valor_86"].sum()
+      valor_87 = df_oficina["Valor_87"].sum()
+      valor_89 = df_oficina["Valor_89"].sum()
+
+      total_hora_valor = hora_86 + hora_87 + hora_89
+      total_liquidado_valor = valor_86 + valor_87 + valor_89
+
+      total_hora_86.append(hora_86)
+      total_hora_87.append(hora_87)
+      total_hora_89.append(hora_89)
+
+      total_valor_86.append(valor_86)
+      total_valor_87.append(valor_87)
+      total_valor_89.append(valor_89)
+
+      total_hora.append(total_hora_valor)
+      total_valor.append(total_liquidado_valor)
+
+    else:
+
+      total_hora_86.append(0)
+      total_hora_87.append(0)
+      total_hora_89.append(0)
+
+      total_valor_86.append(0)
+      total_valor_87.append(0)
+      total_valor_89.append(0)
+
+      total_hora.append(0)
+      total_valor.append(0)
+
 
   df_area_total["Oficina"] = oficinas
   df_area_total["Total horas normales"] = total_hora_86
@@ -578,6 +627,8 @@ def resumen_oficinas(df):
   df_area_total["Total liquidado al 50"] = total_valor_87
   df_area_total["Total horas al 100"] = total_hora_89
   df_area_total["Total liquidado al 100"] = total_valor_89
+  df_area_total["Total horas"] = total_hora
+  df_area_total["Total liquidado"] = total_valor
 
   return df_area_total  
 
