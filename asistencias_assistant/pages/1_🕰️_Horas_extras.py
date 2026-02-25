@@ -164,35 +164,35 @@ with tab3:
 
         df_area_total = v_mam.resumen_oficinas(dataSetLimpio_mes2)
 
-        output1 = io.BytesIO()
-        output2 = io.BytesIO()
+        #output1 = io.BytesIO()
+        #output2 = io.BytesIO()
         output3 = io.BytesIO()
-        output4 = io.BytesIO()
+        #output4 = io.BytesIO()
 
-        df_area.to_excel(output1, index=False)
-        df_personas.to_excel(output2, index=False)
+        #df_area.to_excel(output1, index=False)
+        #df_personas.to_excel(output2, index=False)
         df_area_total.to_excel(output3, index = False)
-        dataSetLimpio_mes2.to_excel(output4, index= False)
+        #dataSetLimpio_mes2.to_excel(output4, index= False)
 
         mes_anterior_str = v_mam.obtener_mes_anterior()
-        nombre_archivo_1 = f"Dif. horas extras por oficina_{mes_anterior_str}.xlsx"
-        nombre_archivo_2 = f"Dif. horas extras por persona_{mes_anterior_str}.xlsx"
+        #nombre_archivo_1 = f"Dif. horas extras por oficina_{mes_anterior_str}.xlsx"
+        #nombre_archivo_2 = f"Dif. horas extras por persona_{mes_anterior_str}.xlsx"
         nombre_archivo_3 = f"Resumen horas extras mes actual_{mes_anterior_str}.xlsx"
-        nombre_archivo_4 = f"Reporte por empleado de horas extras mes actual_{mes_anterior_str}.xlsx"
+        #nombre_archivo_4 = f"Reporte por empleado de horas extras mes actual_{mes_anterior_str}.xlsx"
 
-        st.download_button(
-            label="📄 Descargar planilla de diferencias de horas extras por oficina",
-            data=output1.getvalue(),
-            file_name=nombre_archivo_1,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        #st.download_button(
+         #   label="📄 Descargar planilla de diferencias de horas extras por oficina",
+         #   data=output1.getvalue(),
+         #   file_name=nombre_archivo_1,
+         #   mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        #)
 
-        st.download_button(
-            label="📄 Descargar planilla de diferencias de horas extras por persona",
-            data=output2.getvalue(),
-            file_name=nombre_archivo_2,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        #st.download_button(
+        #    label="📄 Descargar planilla de diferencias de horas extras por persona",
+        #    data=output2.getvalue(),
+        #    file_name=nombre_archivo_2,
+        #    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        #)
 
         st.download_button(
         label="📄 Descargar resumen por oficina para el mes actual",
@@ -201,12 +201,12 @@ with tab3:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-        st.download_button(
-        label="📄 Descargar planilla de horas extras por empleado",
-        data=output4.getvalue(),
-        file_name=nombre_archivo_4,
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+        #st.download_button(
+        #label="📄 Descargar planilla de horas extras por empleado",
+        #data=output4.getvalue(),
+        #file_name=nombre_archivo_4,
+        #mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        #)
 
 with tab4:
     st.subheader('🗞️ Extra! Extra!')
@@ -286,4 +286,4 @@ with tab4:
 
                     if len(nombres_no_coinciden) > 0:
                         st.write('Los siguientes nombres pueden no coincidir:')
-                        xx.imprimir_nombres_no_coinciden(nombres_no_coinciden)
+                        xx.imprimir_nombre_no_coinciden(nombres_no_coinciden)
