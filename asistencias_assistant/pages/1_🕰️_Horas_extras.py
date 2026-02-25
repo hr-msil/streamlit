@@ -286,4 +286,4 @@ with tab4:
 
                     if len(nombres_no_coinciden) > 0:
                         st.write('Los siguientes nombres pueden no coincidir:')
-                        xx.imprimir_nombre_no_coinciden(nombres_no_coinciden)
+                        xx.imprimir_nombres_no_coinciden(nombres_no_coinciden)
