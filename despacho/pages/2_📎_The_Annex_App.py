@@ -13,7 +13,8 @@ from theannexapp import armar_anexos
 ## Streamlit APP ## 
 
 st.title('The Annex App📎')
-st_archivos = st.file_uploader("Clickeá donde dice 'Browse files' y subí los archivos", accept_multiple_files=True)
+st_archivos = st.file_uploader("Clickeá donde dice 'Browse files' y subí los anexos", type = ["xls"], accept_multiple_files=True)
+st.write("Recordá que los archivos tienen que tener como nombre el expediente al que refieren.")
 
 if st_archivos:
     st.success(f"Subiste {len(st_archivos)} planilla(s)")
@@ -33,4 +34,5 @@ if st_archivos:
             file_name= titulo.strip() + ".docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             icon=":material/download:",
+
         )
