@@ -16,7 +16,7 @@ import services.chequeo_legajos as cl
 
 st.set_page_config(page_title="Horas extras", page_icon="🕰️", layout = 'wide')
 
-tab1, tab2, tab3, tab4= st.tabs(["🗂️ Chequeo de legajos","📝 Armado del CSV","Extra Extra","Variación intermensual"])
+tab1, tab2, tab3, tab4= st.tabs(["🗂️ Chequeo de legajos","📝 Armado del CSV","🗞️ Extra Extra","📊 Variación intermensual"])
 
 with tab1:
    
