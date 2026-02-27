@@ -5,19 +5,41 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.enum.section import WD_ORIENT
 from docx.shared import Mm
 import streamlit as st
+import pandas as pd
 from io import BytesIO
 
-def armar_anexo(documento,planilla):
+
+def armar_anexo(documento,planilla_xls,nombre_planilla):
     # Encabezado del anexo centrado y en negrita
+
+    
+    xlsx_buffer = BytesIO()
+    df = pd.read_excel(planilla_xls)
+
+    # quitamos las columnas oficina y nombre oficina
+    nombres_cols_oficinas = df.columns[:2]
+    df = df.drop(nombres_cols_oficinas, axis = 1)
+    
+    # cambiamos el formato de fechas de columnas
+    nombres_cols_fechas = df.columns[5:]
+    df[nombres_cols_fechas] = df[nombres_cols_fechas].apply(
+            pd.to_datetime,
+            format='%d/%m/%Y',
+            errors='coerce'
+        )
+    df.to_excel(xlsx_buffer, index=False)
+    xlsx_buffer.seek(0)
+
     parrafo_exp = documento.add_paragraph()
-    nombre_anexo = planilla.name.split('.xlsx')[0]
+    # Agregar titulo de pagina
+    nombre_anexo = nombre_planilla.split('.xls')[0]
     run_exp = parrafo_exp.add_run(nombre_anexo)
     run_exp.bold = True
     run_exp.underline = True
     run_exp.font.size = Pt(16)
     parrafo_exp.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
-    # Tabla
+    # Agregar tabla
     tabla = documento.add_table(rows=1, cols=8)
     tabla.style = 'Table Grid'  # Bordes visibles
 
@@ -31,26 +53,32 @@ def armar_anexo(documento,planilla):
     encabezado[6].text = "EGRESO"
     encabezado[7].text = "NOTIFICACION FIRMA Y FECHA"
 
-    wb = openpyxl.load_workbook(planilla,read_only = True)
+    wb = openpyxl.load_workbook(xlsx_buffer, read_only = True)
     ws = wb.worksheets[0]
-
-    for row in ws.iter_rows(min_row = 2, max_row = ws.max_row, min_col = 3, max_col = 9):
+ 
+    for row in ws.iter_rows(min_row = 2, max_row = ws.max_row, min_col = 1, max_col = 7):
         if not all(cell.value is None for cell in row):
             fila = tabla.add_row().cells
-            i = 0
+            idx_col = 0
+            es_999 = False
             for cell in row:
-                if i == 5 or i == 6:
-                    fila[i].text = str(cell.value.strftime("%d/%m/%Y"))
-                elif cell.value is not None:
-                    fila[i].text = str(cell.value)
-                else:
-                    fila[i].text = ""
-                i += 1
+                if idx_col == 2: # col categoria
+                    es_999 = "999" in str(cell.value) # chequeamos si es 999 para modificar bonificacion 
+                    fila[idx_col].text = str(cell.value)
+                elif idx_col == 4 and es_999: # col bonificacion y es 999
+                    fila[idx_col].text = "" # no ponemos nada porque los 999 no tienen bonificaciones salvo los modulos que cobran
+                elif idx_col == 5 or idx_col == 6: # col fechas
+                    fila[idx_col].text = str(cell.value.strftime("%d/%m/%Y"))
+                elif cell.value is not None: # otra col con texto
+                    fila[idx_col].text = str(cell.value)
+                else: # celda sin texto
+                    fila[idx_col].text = ""
+                idx_col += 1
             fila[7].text = "" # espacio para firmar
 
     documento.add_page_break()
 
-def armar_anexos(planillas):
+def armar_anexos(anexos):
     documento = Document()
 
     style = documento.styles['Normal']
@@ -69,9 +97,14 @@ def armar_anexos(planillas):
     section.footer_distance = Mm(12.7)
     section.orientation = WD_ORIENT.LANDSCAPE
 
-    for planilla in planillas:
-        armar_anexo(documento,planilla)
+    for anexo in anexos:
+        df = pd.read_excel(anexo, engine="xlrd")
+        buffer = BytesIO()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False)
+        buffer.seek(0)
+        armar_anexo(documento,buffer,anexo.name)
 
-    return documento
+    return documento documento
 
 
