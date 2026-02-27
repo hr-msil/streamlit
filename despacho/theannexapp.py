@@ -105,6 +105,4 @@ def armar_anexos(anexos):
         buffer.seek(0)
         armar_anexo(documento,buffer,anexo.name)
 
-    return documento documento
-
-
+    return documento
