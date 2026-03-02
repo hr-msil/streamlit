@@ -9,6 +9,7 @@ import io
 from openpyxl import load_workbook
 from openpyxl.styles import numbers
 import xlwt
+import re
 
 #---------- Funciones principales -----------
 
@@ -51,7 +52,7 @@ def dividir_oficinas(df: pd.DataFrame) -> tuple[list[pd.DataFrame], list[str]]:
     for oficina in oficinas_unicas:
 
         df_oficina = df[df["Oficina"] == oficina]
-        df_oficina_na = df_oficina[df_oficina["Fecha Egreso Cargo"].isna()]
+        df_oficina_na = df_oficina[(df_oficina["Fecha Egreso Cargo"].isna()) & (df_oficina["Evaluación"] != "Enviar nota de designación") ]
 
         if df_oficina_na.shape[0] == 0:
         #Si no hay ningun na en niguna de las filas del dataFrame filtrado por oficina, lo carga y lo devuleve, en caso contrario no lo carga
@@ -60,6 +61,8 @@ def dividir_oficinas(df: pd.DataFrame) -> tuple[list[pd.DataFrame], list[str]]:
             oficinas_nan.append(oficina)
 
     return df_oficinas,oficinas_nan
+
+
 
 
 #############
@@ -91,6 +94,12 @@ opciones = [
     "SEGURIDAD"
 ]
 
+
+#Esto contempla los casos que son norenueva, no renueba, no renueva , etc.
+pattern = re.compile(
+    r"\bno\s+(?:se\s+)?ren(?:ov|uev|ueb)\w*\b",
+    re.IGNORECASE
+)
 
 
 st.subheader("Elegir el área del cuál se está subiendo el archivo:")
@@ -141,10 +150,6 @@ elif opcion == "AMBIENTE Y ESPACIO PUBLICO" or opcion == "SALUD PUBLICA" or opci
 
             df["Categoría"] = df["Categoría"].replace("NO CATEGORIZADO", 999)
 
-            #Filtrar dataFrame sacando los que tienen en Fecha Egreso Cargo #Enviar nota de designación"
-            df = df[df["Fecha Egreso Cargo"] != "Enviar nota de designación"]
-
-            df = borrar_ultimas_columnas(df, 3)
 
             df_oficinas,oficinas_nan = dividir_oficinas(df)
 
@@ -152,7 +157,10 @@ elif opcion == "AMBIENTE Y ESPACIO PUBLICO" or opcion == "SALUD PUBLICA" or opci
             for df_oficina in df_oficinas:
                 
 
+                df_oficina = df_oficina[(df_oficina["Evaluación"] != "Enviar nota de designación") & (~df_oficina["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False)) ]
+                df_oficina = borrar_ultimas_columnas(df_oficina,2)
                 df_oficina = df_oficina.reset_index(drop=True)
+                
 
 
                 oficina = df_oficina["Oficina"].unique()  # Array de valores únicos
@@ -181,6 +189,22 @@ elif opcion == "AMBIENTE Y ESPACIO PUBLICO" or opcion == "SALUD PUBLICA" or opci
                         else:
                             ws.write(row_idx + 1, col_idx, value)
 
+                                # ===== AUTOFIT =====
+                for col_idx, col_name in enumerate(df_oficina.columns):
+                    
+                    # Largo del encabezado
+                    max_length = len(str(col_name))
+                    
+                    # Largo máximo del contenido
+                    for value in df_oficina.iloc[:, col_idx]:
+                        if value is not None:
+                            length = len(str(value))
+                            if length > max_length:
+                                max_length = length
+                    
+                    # Ajuste (256 es unidad de xlwt, +2 da un pequeño margen)
+                    ws.col(col_idx).width = 256 * (max_length + 2)
+
                 wb.save(outputi)
                 outputi.seek(0)
 
@@ -207,7 +231,7 @@ elif opcion == "AMBIENTE Y ESPACIO PUBLICO" or opcion == "SALUD PUBLICA" or opci
         
 else:
     
-    agree = st.checkbox("Por favor, hacer clic en la casilla si se desea separar el archivo por oficinas.")
+    agree = st.checkbox("Por favor hacer clic en la casilla si se desea separar los archivos resultantes por oficina")
 
     st.subheader(f"📂Archivo de mensualizados del área {opcion}")
 
@@ -224,17 +248,17 @@ else:
         
 
         hoja = st.selectbox(
-        "Elegir hoja que se quiere procesar.",
+        "Elegir hoja que se quiere procesar",
         opciones_hojas
         )
 
         if hoja == "":
 
-            st.subheader("IMPORTANTE❗: seleccionar la hoja antes de continuar.")
+            st.subheader("IMPORTANTE❗: seleccionar la hoja antes de continuar")
 
         elif hoja == "HOJA":
 
-            st.subheader("Esta hoja no puede ser procesada.")
+            st.subheader("Esta hoja no puede ser procesada")
 
 
         else:
@@ -245,12 +269,8 @@ else:
 
                 df["Categoría"] = df["Categoría"].replace("NO CATEGORIZADO", 999)
 
-                #Filtrar dataFrame sacando los que tienen en Fecha Egreso Cargo #Enviar nota de designación"
-                df = df[df["Fecha Egreso Cargo"] != "Enviar nota de designación"]
+                #Filtrar dataFrame sacando los que tienen en Evaluación es distinta a enviar nota de designación
 
-                df = borrar_ultimas_columnas(df, 3)
-
-                
                 df_oficinas,oficinas_nan = dividir_oficinas(df)
 
                 
@@ -259,9 +279,11 @@ else:
                     
 
                     df_oficina = df_oficina.reset_index(drop=True)
-
-
+                    df_oficina = df_oficina[(df_oficina["Evaluación"] != "Enviar nota de designación") & (~df_oficina["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False)) ]
                     oficina = df_oficina["Oficina"].unique()  # Array de valores únicos
+                    df_oficina = borrar_ultimas_columnas(df_oficina,2)
+                    df_oficina = df_oficina.reset_index(drop=True)
+                    df_oficina = df_oficina.fillna('')
 
                     outputi = io.BytesIO()
 
@@ -287,6 +309,21 @@ else:
                             else:
                                 ws.write(row_idx + 1, col_idx, value)
 
+                    for col_idx, col_name in enumerate(df_oficina.columns):
+                    
+                        # Largo del encabezado
+                        max_length = len(str(col_name))
+                    
+                        # Largo máximo del contenido
+                        for value in df_oficina.iloc[:, col_idx]:
+                            if value is not None:
+                                length = len(str(value))
+                                if length > max_length:
+                                    max_length = length
+                    
+                            # Ajuste (256 es unidad de xlwt, +2 da un pequeño margen)
+                        ws.col(col_idx).width = 256 * (max_length + 2)
+                    
                     wb.save(outputi)
                     outputi.seek(0)
 
@@ -300,16 +337,18 @@ else:
                     )
 
                 if len(oficinas_nan) != 0:
+
                     st.divider()
+
                     st.markdown("Estas son las oficinas que no pueden ser procesadas porque faltan completar la fecha de egreso del cargo para algunas evaluaciones. Por favor completar y volver a realizar procedimiento.")
 
                     for oficina_nan in oficinas_nan:
-                        st.write("""-""" + oficina_nan)
+                        st.write("""-""",oficina_nan)
                 
 
             else:
 
-                df_nan = df[df["Fecha Egreso Cargo"].isna()]
+                df_nan = df[(df["Fecha Egreso Cargo"].isna()) & (df["Evaluación"] != "Enviar nota de designación") ]
 
                 if df_nan.shape[0] != 0: 
 
@@ -319,6 +358,10 @@ else:
                 else:
 
                     df = df.reset_index(drop=True)
+                    df = df[(df["Evaluación"] != "Enviar nota de designación") & (~df["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False)) ]
+                    df = borrar_ultimas_columnas(df,2)
+                    df = df.reset_index(drop=True)
+                    df = df.fillna('')
 
 
                     outputi = io.BytesIO()
@@ -345,6 +388,21 @@ else:
                             else:
                                 ws.write(row_idx + 1, col_idx, value)
 
+                    for col_idx, col_name in enumerate(df.columns):
+                    
+                        # Largo del encabezado
+                        max_length = len(str(col_name))
+                    
+                        # Largo máximo del contenido
+                        for value in df.iloc[:, col_idx]:
+                            if value is not None:
+                                length = len(str(value))
+                                if length > max_length:
+                                    max_length = length
+                    
+                            # Ajuste (256 es unidad de xlwt, +2 da un pequeño margen)
+                        ws.col(col_idx).width = 256 * (max_length + 2)
+                    
                     wb.save(outputi)
                     outputi.seek(0)
 
@@ -356,3 +414,7 @@ else:
                         file_name=nombre_archivo_i,
                         mime="application/vnd.ms-excel"
                     )
+
+
+
+    
