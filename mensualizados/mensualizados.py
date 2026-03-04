@@ -238,7 +238,7 @@ else:
 
     st.markdown("Subir el archivo de mensualizados")
 
-    archivo_1 = st.file_uploader("Seleccionar el archivo de mensualizados", type=["xlsx", "xls"], key="archivo1",accept_multiple_files=False)
+    archivo_1 = st.file_uploader("Seleccionar el archivo de mensualizados", type=["xlsx"], key="archivo1",accept_multiple_files=False)
 
     if archivo_1:
 
