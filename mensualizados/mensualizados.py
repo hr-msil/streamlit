@@ -158,6 +158,7 @@ elif opcion == "AMBIENTE Y ESPACIO PUBLICO" or opcion == "SALUD PUBLICA" or opci
                 
 
                 df_oficina = df_oficina[(df_oficina["Evaluación"] != "Enviar nota de designación") & (~df_oficina["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False)) ]
+                if df_oficina.shape[0] == 0: continue
                 df_oficina = borrar_ultimas_columnas(df_oficina,3)
                 df_oficina = df_oficina.reset_index(drop=True)
                 df_oficina = df_oficina.fillna("")
@@ -281,6 +282,7 @@ else:
 
                     df_oficina = df_oficina.reset_index(drop=True)
                     df_oficina = df_oficina[(df_oficina["Evaluación"] != "Enviar nota de designación") & (~df_oficina["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False)) ]
+                    if df_oficina.shape[0] == 0: continue
                     oficina = df_oficina["Oficina"].unique()  # Array de valores únicos
                     df_oficina = borrar_ultimas_columnas(df_oficina,3)
                     df_oficina = df_oficina.reset_index(drop=True)
