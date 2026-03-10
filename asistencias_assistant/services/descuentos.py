@@ -7,15 +7,19 @@ import xlsxwriter as xl
 import io
 
 #Cuando se habla de df_uno o cant_izq se refiere al primer archivo excel que se extrae del sistema y que cada agrupación debe completar en la columna de Se descuenta?
-#en cambio, cuando hablamos de df_dos o cant_der se refiere al segunfo archivo tirado por el  sistema que debe tener todas las correcciones realizada en la primer parte
+#en cambio, cuando hablamos de df_dos o cant_der se refiere al segundo archivo tirado por el  sistema que debe tener todas las correcciones realizada en la primer parte
 
 
 #Motivos que se tratan de forma especial
 
 
 motivos_sin_accion = ["RESERVA DE CARGO", "LICENCIA S/GOCE DE SUELDO", "RESERVA DE CARGO POR FUNCION CONCEJAL"] #se ignora la comparación
-motivos_copiar_fila = ["SUSPENSION",  "JORNADA REDUCIDA SAYEP"] #si hay diferencias se copia la fila_ws
+motivos_no_desglaseados = ["SUSPENSION",  "JORNADA REDUCIDA SAYEP"] #si hay diferencias se copia el ultimo valor porque este en la planilla no se desglosa en filas por cantidad de días.
 motivo_presentismo = "PRESENTISMO PUNTUALIDAD (PROCESO DESCUEN" #se hace la comparación solo de izquierda a derecha
+
+def suma_vectores(vec1, vec2):
+    res = [sum(x) for x in zip(vec1,vec2)]
+    return res
 
 
 def leer_excel(nombre_archivo: str, nombre_hoja: str = None) -> pd.DataFrame:
@@ -54,6 +58,8 @@ def tipo_de_fila(valor_columna) -> int:
     else:
         return 3 #es una fila_ws con las ausencias
     
+
+
 def extraer_legajo_persona(datos_persona: str) -> str:
     """
     Dados el string de datos de una persona, devuelve el legajo al que corresponde.
@@ -130,15 +136,17 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
     df_dos es la segunda planilla de descuentos que sale del sistema.
     El criterio de comparación es sencillo:
     * Para los motivos_sin_accion no se consideran en la comparacion
-    * Para los motivos_copiar_fila y motivo_presentismo comparamos que coincidan en ambas planillas. De no coincidir se guarda el dato en df_dos 
+    * Para los motivos_no_desglaseados y motivo_presentismo comparamos que coincidan en ambas planillas. De no coincidir se guarda el dato en df_dos 
     '''
 
-    legajos_chequear = df_uno["Legajo"].unique()
+    legajos_uno = df_uno["Legajo"].unique()
+    legajos_dos = df_dos["Legajo"].unique()
+    legajos_chequear = np.union1d(legajos_uno, legajos_dos)
 
     # obtenemos el conjunto de todos los motivos que aparecen en ambos arrays
     motivos_uno = df_uno["Nombre descuento"].unique()
     motivos_dos = df_dos["Nombre descuento"].unique()
-    motivos = np.union1d(motivos_uno,motivos_dos)
+    motivos = np.union1d(motivos_uno, motivos_dos)
 
     # diccionario de diferencias con claves legajos y valor diccionarios cuyas claves son motivos y valor es un vector de los campos
     # 'Llegadas tarde','Salidas antes','Días sin fichada','Días ausencia'
@@ -163,16 +171,17 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
             if cant_izq == 0 and cant_der == 0: # Si no existe el motivo para este legajo en ninguna planilla no hago nada
                     continue
             
-            if motivo in motivos_copiar_fila: # Lo  que hacemos es para este caso ver el valor y compararlos 
+            if motivo in motivos_no_desglaseados: # Lo  que hacemos es para este caso ver el valor y compararlos 
 
                 valor_izq = df_uno_mot_leg["Días ausencia"].iloc[0] if cant_izq > 0 else 0
                 valor_der = df_dos_mot_leg["Días ausencia"].iloc[0] if cant_der > 0 else 0
 
                 if valor_der == 0: # Si no está del lado derecho es porque debe estar del lado izquierdo
-                    diferencias[legajo_str][motivo] = [0,0,0,valor_izq ]
+                    diferencias[legajo_str][motivo] = [0,0,0,valor_izq]
 
                 elif valor_izq == 0 and valor_izq != valor_der: # Si no está del lado izquierdo, está del lado derecho o si ambos no son cero, chequear que den lo mismo.
                     diferencias[legajo_str][motivo] = [0,0,0,valor_izq]
+
 
             elif motivo == motivo_presentismo:
                 if cant_der < cant_izq: # por lo hablado con Azu solo reportamos cuando esta en el de la izquierda y no en el de la derecha
@@ -187,11 +196,40 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
                 elif cant_der < cant_izq:
 
                     diferencias[legajo_str][motivo] = [0,0,0,cant_izq]
+    
+    df_na = df_uno[df_uno["Se descuenta?"].isna()]
+    legajos_na_chequear = df_na["Legajo"].unique()
+    
+    for legajo in legajos_na_chequear:
+        legajo_str = str(legajo)
+        df_na_leg = df_na[df_na["Legajo"] == legajo_str]
+        motivos_na = df_na_leg["Nombre descuento"].unique()
+
+        for motivo in motivos_na:
+
+            if motivo in motivos_sin_accion: 
+                continue
+
+            df_na_mot_leg = df_na_leg[df_na_leg["Nombre descuento"] == motivo]
+            cant_filas = df_na_leg.shape[0]
+
+            vector_en_diferencias = diferencias[legajo_str][motivo]
+            vector_en_diferencias = vector_en_diferencias if len(vector_en_diferencias) > 0 else [0,0,0,0]
+            if motivo in motivos_no_desglaseados:
+                valor = df_na_mot_leg["Días ausencia"].iloc[0]
+                nuevo_vector = [0,0,0,valor]
+            elif motivo == motivo_presentismo:
+                nuevo_vector = [df_na_mot_leg.loc[0,"Llegadas tarde"],df_na_mot_leg.loc[0,"Salidas antes"],df_na_mot_leg.loc[0,"Días sin fichada"],df_na_mot_leg[0,"Días ausencia"]]
+            else:
+                nuevo_vector = [0,0,0,cant_filas]
+            
+            diferencias[legajo_str][motivo] = suma_vectores(nuevo_vector,vector_en_diferencias)
+
 
     return diferencias
 
 motivos_sin_accion = ["RESERVA DE CARGO", "LICENCIA S/GOCE DE SUELDO", "RESERVA DE CARGO POR FUNCION CONCEJAL"] #se ignora la comparación
-motivos_copiar_fila = ["SUSPENSION",  "JORNADA REDUCIDA SAYEP"] #si hay diferencias se copia la fila_ws
+motivos_no_desglaseados = ["SUSPENSION",  "JORNADA REDUCIDA SAYEP"] #si hay diferencias se copia la fila_ws
 motivo_presentismo = "PRESENTISMO PUNTUALIDAD (PROCESO DESCUEN" #se hace la comparación solo de izquierda a derecha
 
 # CREAR PLANILLA
@@ -253,7 +291,7 @@ def imprimir_diferencias(dd: defaultdict[str, defaultdict[str, list[str]]]):
         st.write(f"\n Legajo {clave_principal}")
 
         for nombre, numeros in subdict.items():
-            if nombre not in motivos_copiar_fila and nombre != motivo_presentismo:
+            if nombre not in motivos_no_desglaseados and nombre != motivo_presentismo:
                 st.write(f"-    Motivo  {nombre}: {numeros[3]}")
             else:
                 st.write(f"-    Motivo  {nombre}")
