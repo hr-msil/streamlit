@@ -38,12 +38,7 @@ if archivo_derecha and archivo_izquierda:
         dic_legajos_izq, df_limpio_izq = armado_df(df_uno)
         dic_legajos_der, df_limpio_der = armado_df(df_dos)
 
-        if not hay_descuentos_vacios(df_limpio_izq):
-            diferencias = comparacion(df_limpio_izq,df_limpio_der)
-
-        else:
-            st.write("No se puede procesar la planilla porque existen campos vacios en la columna de \"Se descuenta?\"")
-            st.stop()
+        diferencias = comparacion(df_limpio_izq,df_limpio_der)
 
         print("-----DIFERENCIAS--------")
         imprimir_diferencias(diferencias)
