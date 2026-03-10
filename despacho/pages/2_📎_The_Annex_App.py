@@ -14,7 +14,7 @@ from theannexapp import armar_anexos_dos
 st.title('The Annex App📎')
 
 ## Streamlit APP ## 
-opciones = [" ","Hacer anexo de mensualizados", "Hacer el otro anexo"]
+opciones = [" ","Anexo mensualizados", "Anexo de bonificaciones/retribuciones"]
 
 opcion = st.selectbox(
     "Elegir una opción",
@@ -31,7 +31,7 @@ else:
         st.success(f"Subiste {len(st_archivos)} planilla(s)")
         titulo = st.text_input("Escribí el nombre del archivo y presioná Enter", "Anexo Subsecretaría ABC")
 
-        if opcion == "Hacer anexo de mensualizados":
+        if opcion == "Anexo mensualizados":
             documento = armar_anexos(st_archivos)
 
             buffer = BytesIO()
@@ -60,4 +60,5 @@ else:
                 file_name= titulo.strip() + ".docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 icon=":material/download:",
+
             )
