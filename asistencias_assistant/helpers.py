@@ -6,7 +6,7 @@ from pandas.api.types import is_numeric_dtype
 import re
 import numpy as np
 
-codigos_ausencias_no_descontables_viaticos = set([0,18,38,64,66,76,78,79,80,81,87,100,101,600])
+codigos_ausencias_no_descontables_viaticos = set([0,18,38,64,66,76,78,79,80,81,87,100,101,102,600])
 codigos_ausencias_no_descontables_hhee = (set([1,4,5,6,7,8,9,10,11,12,13,
                                           14,15,16,17,18,21,22,25,26,
                                           30,31,32,33,34,35,36,37,38,39,
@@ -318,4 +318,5 @@ def lista_a_string(lista):
         s += ", " + str(x)
 
     return s 
+
 
