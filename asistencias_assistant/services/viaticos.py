@@ -225,7 +225,6 @@ def validar_legajos_y_nombres(planilla: pd.DataFrame,
     datos_sistema = datos_sistema[datos_sistema.columns[:2]]
     datos_sistema.columns = ["legajo","empleado"]
     datos_sistema.dropna(subset=["legajo"])
-    datos_sistema = datos_sistema[datos_sistema["legajo"].str.contains(r'^\d+$')]
     datos_sistema["legajo"] = datos_sistema["legajo"].astype(int).astype(str)
 
     empleados_mal_cargados = []
@@ -341,11 +340,11 @@ def modificar_reportar_viaticos_en_ausencia(ausencias,planilla_viaticos):
         st.write("Se anularon horas extras para los siguientes legajos por motivo de ausencia.")
         for legajo in inconsistencias_ausencias:
             inconsistencias_legajo = inconsistencias_ausencias[legajo]
-            with st.expander(f"\n* **Empleado {dict_legajo_empleado[legajo]} - {legajo}**\n"):
-                s = ""
-                for dia, motivo in inconsistencias_legajo:
-                    s += f"    - {dia}/{mes}/{anio} | {motivo}\n"   
-                st.markdown(s)
+            st.write(f"\n* **Empleado {dict_legajo_empleado[legajo]} - {legajo}**\n")
+            s = ""
+            for dia, motivo in inconsistencias_legajo:
+                s += f"    - {dia}/{mes}/{anio} | {motivo}\n"   
+            st.markdown(s)
     
     return viaticos
 
@@ -372,4 +371,3 @@ def reportar_diferencias_viaticos(df):
         st.write(df)
     else:
         st.write("No se hallaron diferencias para reportar.")
-
