@@ -337,7 +337,7 @@ def modificar_reportar_viaticos_en_ausencia(ausencias,planilla_viaticos):
     dict_legajo_empleado = viaticos.set_index("legajo")["empleado"].to_dict()
 
     if len(inconsistencias_ausencias) > 0:
-        st.write("Se anularon horas extras para los siguientes legajos por motivo de ausencia.")
+        st.write("Se anularon viáticos para los siguientes legajos por motivo de ausencia.")
         for legajo in inconsistencias_ausencias:
             inconsistencias_legajo = inconsistencias_ausencias[legajo]
             st.write(f"\n* **Empleado {dict_legajo_empleado[legajo]} - {legajo}**\n")
@@ -370,4 +370,5 @@ def reportar_diferencias_viaticos(df):
         st.write("Estas son las diferencias encontradas en los montos al producirse la comparación con las ausencias.")
         st.write(df)
     else:
+
         st.write("No se hallaron diferencias para reportar.")
