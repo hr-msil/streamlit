@@ -225,6 +225,7 @@ def validar_legajos_y_nombres(planilla: pd.DataFrame,
     datos_sistema = datos_sistema[datos_sistema.columns[:2]]
     datos_sistema.columns = ["legajo","empleado"]
     datos_sistema.dropna(subset=["legajo"])
+    datos_sistema = datos_sistema[datos_sistema["legajo"].str.contains(r'^\d+$')]
     datos_sistema["legajo"] = datos_sistema["legajo"].astype(int).astype(str)
 
     empleados_mal_cargados = []
@@ -371,3 +372,4 @@ def reportar_diferencias_viaticos(df):
         st.write(df)
     else:
         st.write("No se hallaron diferencias para reportar.")
+
