@@ -65,7 +65,11 @@ def transformar_hhee_a_csv(df: pd.DataFrame):
                 .str.replace(",", ".", regex=False)  # reemplaza coma decimal si aparece
         )
         summary_final[col] = pd.to_numeric(summary_final[col], errors="coerce").fillna(0)
-    
+
+
+    cols = ["horas_normales", "horas_50", "horas_100"]
+
+    summary_final = summary_final[(summary_final[cols] != 0).all(axis=1)]
     # Lo transformamos a CSV
     return summary_final
 
