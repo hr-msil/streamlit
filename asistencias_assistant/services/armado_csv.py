@@ -69,7 +69,7 @@ def transformar_hhee_a_csv(df: pd.DataFrame):
 
     cols = ["horas_normales", "horas_50", "horas_100"]
 
-    summary_final = summary_final[(summary_final[cols] != 0).all(axis=1)]
+    summary_final = summary_final[~(summary_final[cols] == 0).all(axis=1)]
     # Lo transformamos a CSV
     return summary_final
 
