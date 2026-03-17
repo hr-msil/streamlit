@@ -271,6 +271,34 @@ def reportar_validacion_legajos(resultados: list[tuple[str,str,str]]):
                 st.markdown(" - " + f" {legajo} - {legajos_no_encontrados[legajo]}")
     else:
         st.write("No se encontraron errores de carga de legajos o nombres.")
+        
+def cortar_dias_no_habiles(viaticos,inconsistencias_ausencias):
+    # Para todos los dias no habiles, poner en 0
+    hoy = datetime.today()
+    mismo_dia_mes_anterior = hoy - relativedelta(months=1)
+    mes = mismo_dia_mes_anterior.month
+    anio = mismo_dia_mes_anterior.year
+    dias_findes = obtener_fines_de_semana(anio,mes)
+    dias_feriados = obtener_dias_feriados(anio,mes)
+    dias_no_habiles = sorted(set(
+                    dias_findes +
+                    dias_feriados
+                ))
+
+    for idx, row in viaticos.iterrows():
+        legajo = row["legajo"]
+        for dia in dias_no_habiles:
+            valor = row[dia]
+            if valor > 0:
+                # corregir dataframe
+                viaticos.at[idx, dia] = 0
+                # registrar inconsistencia
+                inconsistencias_ausencias[legajo].append(
+                    (dia, "DIA NO HABIL")
+                )
+
+    st.write("Se pusieron en cero todos los viáticos que caen en día no hábil. Estos días son: " + lista_a_string(dias_no_habiles))
+
 
 def modificar_reportar_viaticos_en_ausencia(ausencias,planilla_viaticos):
     '''
@@ -308,31 +336,7 @@ def modificar_reportar_viaticos_en_ausencia(ausencias,planilla_viaticos):
                     (dia, "MAYOR A 20 UNIDADES")
                 )
 
-    # Para todos los dias no habiles, poner en 0
-    hoy = datetime.today()
-    mismo_dia_mes_anterior = hoy - relativedelta(months=1)
-    mes = mismo_dia_mes_anterior.month
-    anio = mismo_dia_mes_anterior.year
-    dias_findes = obtener_fines_de_semana(anio,mes)
-    dias_feriados = obtener_dias_feriados(anio,mes)
-    dias_no_habiles = sorted(set(
-                    dias_findes +
-                    dias_feriados
-                ))
-
-    for idx, row in viaticos.iterrows():
-        legajo = row["legajo"]
-        for dia in dias_no_habiles:
-            valor = row[dia]
-            if valor > 0:
-                # corregir dataframe
-                viaticos.at[idx, dia] = 0
-                # registrar inconsistencia
-                inconsistencias_ausencias[legajo].append(
-                    (dia, "DIA NO HABIL")
-                )
-
-    st.write("Se pusieron en cero todos los viáticos que caen en día no hábil. Estos días son: " + lista_a_string(dias_no_habiles))
+    # cortar_dias_no_habiles(viaticos,inconsistencias_habiles)
     
     dict_legajo_empleado = viaticos.set_index("legajo")["empleado"].to_dict()
 
