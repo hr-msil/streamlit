@@ -339,6 +339,10 @@ def modificar_reportar_viaticos_en_ausencia(ausencias,planilla_viaticos):
     # cortar_dias_no_habiles(viaticos,inconsistencias_habiles)
     
     dict_legajo_empleado = viaticos.set_index("legajo")["empleado"].to_dict()
+    hoy = datetime.today()
+    mismo_dia_mes_anterior = hoy - relativedelta(months=1)
+    mes = mismo_dia_mes_anterior.month
+    anio = mismo_dia_mes_anterior.year
 
     if len(inconsistencias_ausencias) > 0:
         st.write("Se anularon viáticos para los siguientes legajos por motivo de ausencia.")
