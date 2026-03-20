@@ -167,6 +167,16 @@ def normalizar_planilla_hhee(planilla_hhee):
         df.columns[2]: "tipo_hora"
     }) 
     
+    # Vemos si están correctos los tipos de hora
+
+    tipo_hora = df["tipo_hora"].astype(str).unique()
+    
+    st.write(tipo_hora)
+    if not np.isin(tipo_hora, ["N", "0.5", "0.1"]).any() or len(tipo_hora) > 3:
+        st.error(f"Se encontraron estos tipos de hora {tipo_hora} y por tal motivo no pudieron ser procesados.")
+        st.stop()
+    
+    # Tratamiento del legajo    
     df["legajo"] = (
         df["legajo"]
         .apply(lambda x: str(int(x)) if isinstance(x, (int, float)) and not pd.isna(x) else str(x))
