@@ -181,10 +181,6 @@ def normalizar_planilla_hhee(planilla_hhee):
 
     #Quitar aquellos espacios donde legajo quedó en 0
     df = df[df["legajo"] != '0']
-
-    #Las horas extras son numeros enteros, pero a veces tiene 0.5 como valor y debe pasarse a 1.
-    day_cols = df.columns[3:34]
-    df[day_cols] = np.ceil(df[day_cols]).astype(int)
     
     return df
 
