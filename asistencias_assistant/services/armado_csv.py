@@ -57,19 +57,21 @@ def transformar_hhee_a_csv(df: pd.DataFrame):
     summary_final = summary[["legajo", "horas_normales", "horas_50", "horas_100", "nombre"]]
     summary_final.insert(1, "columna(0)", 0)
 
-    numeric_cols = ["horas_normales", "horas_50", "horas_100"]
-    for col in numeric_cols:
+    cols = ["horas_normales", "horas_50", "horas_100"]
+    for col in cols:
         summary_final[col] = (
             summary_final[col]
                 .astype(str)          # por si vienen como object/float/string
                 .str.replace(",", ".", regex=False)  # reemplaza coma decimal si aparece
         )
         summary_final[col] = pd.to_numeric(summary_final[col], errors="coerce").fillna(0)
+        
+    #Las horas extras son numeros enteros, pero a veces tiene 0.5 como valor y debe pasarse a 1.
+    summary_final[cols] = np.ceil(summary_final[cols]).astype(int)
 
-
-    cols = ["horas_normales", "horas_50", "horas_100"]
-
+    # Filtramos las horas extras que hayan quedado en 0 en el total, esto es para que en el sistema no tire error si subís un csv con todas las cantidades en 0
     summary_final = summary_final[~(summary_final[cols] == 0).all(axis=1)]
+    
     # Lo transformamos a CSV
     return summary_final
 
