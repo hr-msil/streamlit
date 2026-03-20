@@ -75,31 +75,36 @@ with tab2:
         hoja_planilla = obtener_hoja_planilla(planilla_csv)
         planilla_hhee = pd.read_excel(planilla_csv, sheet_name = hoja_planilla, engine = "calamine")
         planilla_hhee = normalizar_planilla_hhee(planilla_hhee)
-        resumen_planilla_pre = a_csv.transformar_hhee_a_csv(planilla_hhee)
-        
-        # procesamos las ausencias 
-        ausencias_ofi = transformar_ausencias_a_dict(ausencias,es_viaticos=False)
 
-        # comparamos la planilla de hhee con las ausencias y reportamos inconsistencias
-        legajos_inconsistencias = a_csv.anular_unidad_por_ausencias(ausencias_ofi,planilla_hhee)
-        a_csv.reportar_inconsistencias_hhee(legajos_inconsistencias,ausencias_ofi) #si la lista es vacía, no devolverá nada
+        st.write("Así queda la planilla de horas extras, ¿querés proseguir?")
+        st.write(planilla_hhee)
 
-        # reportamos diferencias
-        resumen_planilla_pos = a_csv.transformar_hhee_a_csv(planilla_hhee)
-        a_csv.reportar_diferencias_entre_planillas(resumen_planilla_pre,resumen_planilla_pos)
+        if st.button("Quiero seguir"):
+            resumen_planilla_pre = a_csv.transformar_hhee_a_csv(planilla_hhee)
+            
+            # procesamos las ausencias 
+            ausencias_ofi = transformar_ausencias_a_dict(ausencias,es_viaticos=False)
 
-        # Eliminamos los legajos que no tengan horas extras
-        resumen_planilla_final = a_csv.eliminar_legajo_sin_hhee(resumen_planilla_pos) 
+            # comparamos la planilla de hhee con las ausencias y reportamos inconsistencias
+            legajos_inconsistencias = a_csv.anular_unidad_por_ausencias(ausencias_ofi,planilla_hhee)
+            a_csv.reportar_inconsistencias_hhee(legajos_inconsistencias,ausencias_ofi) #si la lista es vacía, no devolverá nada
 
-        # Transformamos para descarga
-        csv = resumen_planilla_final.to_csv(index=False).encode('latin1')
-        st.download_button(
-            label="Descargar CSV",
-            data=csv,
-            file_name=f"{nombre_archivo}.csv",
-            mime="text/csv",
-            key='download_csv_no_index'
-        )
+            # reportamos diferencias
+            resumen_planilla_pos = a_csv.transformar_hhee_a_csv(planilla_hhee)
+            a_csv.reportar_diferencias_entre_planillas(resumen_planilla_pre,resumen_planilla_pos)
+
+            # Eliminamos los legajos que no tengan horas extras
+            resumen_planilla_final = a_csv.eliminar_legajo_sin_hhee(resumen_planilla_pos) 
+
+            # Transformamos para descarga
+            csv = resumen_planilla_final.to_csv(index=False).encode('latin1')
+            st.download_button(
+                label="Descargar CSV",
+                data=csv,
+                file_name=f"{nombre_archivo}.csv",
+                mime="text/csv",
+                key='download_csv_no_index'
+            )
 
 with tab3:
     st.subheader('🗞️ Extra! Extra!')
