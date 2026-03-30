@@ -224,7 +224,7 @@ def armar_anexo_dosV2(documento,planilla):
 
             documento.add_page_break()
             
-            tabla = armar_esqueleto(documento, planilla,[numero_oficina,nombre_oficina])
+            tabla = armar_esqueleto_dos(documento, planilla,[numero_oficina,nombre_oficina])
             oficina_anterior_num = numero_oficina
             oficina_anterior_nom = nombre_oficina
             tiene_bonificacion = False
