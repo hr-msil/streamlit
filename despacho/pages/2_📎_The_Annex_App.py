@@ -51,7 +51,7 @@ if opcion == "Hacer anexo de Mensualizados":
                     st.write(f"**Nombre de las columnas:** {", ".join(nombres_columnas)}")
                     st.write(f"**¿Tiene valores nulos?** {'SI' if tiene_nulos else 'NO'}")
                 with col3:
-                    es_usable = st.checkbox("Marcar como archivo correco", value = True, key = f"check_{i}")
+                    es_usable = st.checkbox("Archivo válido para procesar", value = True, key = f"check_{i}")
                     if es_usable:
                         archivos_a_procesar.append(archivo)
                     else:
@@ -107,7 +107,7 @@ if opcion == "Hacer el otro anexo":
                     st.write(f"**Nombre de las columnas:** {", ".join(nombres_columnas)}")
                     st.write(f"**¿Tiene valores nulos?** {'SI' if tiene_nulos else 'NO'}")
                 with col3:
-                    es_usable = st.checkbox("Marcar como archivo correco", value = True, key = f"check_{i}")
+                    es_usable = st.checkbox("Archivo válido para procesar", value = True, key = f"check_{i}")
                     if es_usable:
                         archivos_a_procesar.append(archivo)
                     else:
