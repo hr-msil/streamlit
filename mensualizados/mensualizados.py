@@ -1,5 +1,4 @@
 # Toma un archivo, lo convierte a un dataFrame, elimina las ultimas 3 columnas 
-# Si el archivo viene del area de SALUD PUBLICA y AMBIENTE Y ESPACIO PUBLICO subdividir en oficinas
 # Y que cada oficina sea un archivo por separado
 
 import pandas as pd
@@ -34,7 +33,7 @@ def borrar_ultimas_columnas(df: pd.DataFrame, n: int) -> pd.DataFrame:
 
 def dividir_oficinas(df: pd.DataFrame) -> tuple[list[pd.DataFrame], list[str]]:
     """
-    Precondicion: que el DataFrame pertenezca al área de salud pública/ambiente y espacio público/desarrollo humano y deportes/educación, cultura y trabajo.
+    Precondicion: que el DataFrame pertenezca al área de ambiente y espacio público/desarrollo humano y deportes/educación, cultura y trabajo.
     Si cuando filtramos por el nombre de oficina, tenemos alguna fila en la columna de Fecha Egreso Cargo con algún valor nan, no agrega esa oficina a la lista
     de dataFrames resultantes
 
@@ -112,7 +111,7 @@ opcion = st.selectbox(
 if opcion == "":
     st.subheader("IMPORTANTE❗: seleccionar el área antes de continuar")
 
-elif opcion == "AMBIENTE Y ESPACIO PUBLICO" or opcion == "SALUD PUBLICA" or opcion == "DESARROLLO HUMANO Y DEPORTES" or opcion == "EDUCACION, CULTURA Y TRABAJO":
+elif opcion == "AMBIENTE Y ESPACIO PUBLICO" or opcion == "DESARROLLO HUMANO Y DEPORTES" or opcion == "EDUCACION, CULTURA Y TRABAJO":
 
     #En caso de ser de alguna de estas oficinas, separamos el archivo por oficinas y retornamos tantos archivos como oficinas COMPLETAS haya.
 
