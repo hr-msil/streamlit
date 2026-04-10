@@ -172,8 +172,8 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
                 continue
             
             # Para cada legajo y motivo, los filtramos en ambos dataFrame. Además, solo filtramos los que se descuentan ya que son los casos que tendrían que aparecer en df_dos           
-            df_uno_mot_leg = df_uno[(df_uno["Legajo"] == legajo) & (df_uno["Nombre descuento"] == motivo) & (df_uno["Se descuenta?"] == "Descontar")]
-            df_dos_mot_leg = df_dos[(df_dos["Legajo"] == legajo) & (df_dos["Nombre descuento"] == motivo)]
+            df_uno_mot_leg = df_uno[(df_uno["Legajo"] == legajo) & (df_uno["Nombre descuento"] == motivo) & (df_uno["Se descuenta?"] == "Descontar")].reset_index(drop=True)
+            df_dos_mot_leg = df_dos[(df_dos["Legajo"] == legajo) & (df_dos["Nombre descuento"] == motivo)].reset_index(drop=True)
 
             cant_izq = df_uno_mot_leg.shape[0]
             cant_der = df_dos_mot_leg.shape[0]
@@ -195,9 +195,8 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
 
 
             elif motivo == motivo_presentismo:
-
                 if cant_der < cant_izq: #por lo hablado con Azu solo reportamos cuando esta en el de la izquierda y no en el de la derecha, además, nos guardamos toda la fila de datos
-                    diferencias[legajo_str][motivo] = [df_uno_mot_leg.loc[0,"Llegadas tarde"],df_uno_mot_leg.loc[0,"Salidas antes"],df_uno_mot_leg.loc[0,"Días sin fichada"],df_uno_mot_leg[0,"Días ausencia"]]
+                    diferencias[legajo_str][motivo] = [df_uno_mot_leg.loc[0,"Llegadas tarde"],df_uno_mot_leg.loc[0,"Salidas antes"],df_uno_mot_leg.loc[0,"Días sin fichada"],df_uno_mot_leg.loc[0,"Días ausencia"]]
 
             else: # para cualquier otro motivo, nos guardamos la cantidad que sea mayor
 
@@ -207,21 +206,22 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
                 elif cant_der < cant_izq:
                     diferencias[legajo_str][motivo] = [0,0,0,cant_izq]
     
-    df_na = df_uno[df_uno["Se descuenta?"].isna()] # Para los casos donde la Oficina NO COMPLETO la columna 'Descontar', los reportamos para que esos casos sean vistos devuelta
+    df_na = df_uno[df_uno["Se descuenta?"].isna()].reset_index(drop=True) # Para los casos donde la Oficina NO COMPLETO la columna 'Descontar', los reportamos para que esos casos sean vistos devuelta
+    df_na = df_na.fillna(0)
     legajos_na_chequear = df_na["Legajo"].unique()
     
     for legajo in legajos_na_chequear:
 
         legajo_str = str(legajo)
-        df_na_leg = df_na[df_na["Legajo"] == legajo_str]
-        motivos_na = df_na_leg["Nombre descuento"].unique()
+        df_na_leg = df_na[df_na["Legajo"] == legajo_str].reset_index(drop=True)
+        motivos_na_leg = df_na_leg["Nombre descuento"].unique()
 
-        for motivo in motivos_na:
+        for motivo in motivos_na_leg:
 
             if motivo in motivos_sin_accion: 
                 continue
 
-            df_na_mot_leg = df_na_leg[df_na_leg["Nombre descuento"] == motivo]
+            df_na_mot_leg = df_na_leg[df_na_leg["Nombre descuento"] == motivo].reset_index(drop=True)
             cant_filas = df_na_leg.shape[0]
 
             vector_en_diferencias = diferencias[legajo_str][motivo] #Es [] si ese legajo no estaba en el diccionario, es un lista con 4 elemntos si ya existe
@@ -232,7 +232,7 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
                 nuevo_vector = [0,0,0,valor]
 
             elif motivo == motivo_presentismo:
-                nuevo_vector = [df_na_mot_leg.loc[0,"Llegadas tarde"],df_na_mot_leg.loc[0,"Salidas antes"],df_na_mot_leg.loc[0,"Días sin fichada"],df_na_mot_leg[0,"Días ausencia"]]
+                nuevo_vector = [df_na_mot_leg.loc[0,"Llegadas tarde"],df_na_mot_leg.loc[0,"Salidas antes"],df_na_mot_leg.loc[0,"Días sin fichada"],df_na_mot_leg.loc[0,"Días ausencia"]]
                 
             else:
                 nuevo_vector = [0,0,0,cant_filas]
