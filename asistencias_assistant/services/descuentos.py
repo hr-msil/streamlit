@@ -175,6 +175,9 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
             df_uno_mot_leg = df_uno[(df_uno["Legajo"] == legajo) & (df_uno["Nombre descuento"] == motivo) & (df_uno["Se descuenta?"] == "Descontar")].reset_index(drop=True)
             df_dos_mot_leg = df_dos[(df_dos["Legajo"] == legajo) & (df_dos["Nombre descuento"] == motivo)].reset_index(drop=True)
 
+            df_uno_mot_leg = df_uno_mot_leg.fillna(0)
+            df_dos_mot_leg = df_dos_mot_leg.fillna(0)
+
             cant_izq = df_uno_mot_leg.shape[0]
             cant_der = df_dos_mot_leg.shape[0]
             #NOTA: recordar que, para los casos de motivos_no_desglaseados la cantidad izquierda y la cantidad derecha será una
