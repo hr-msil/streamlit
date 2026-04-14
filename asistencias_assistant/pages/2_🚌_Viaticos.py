@@ -16,7 +16,7 @@ archivo_planilla = st.file_uploader("", type = 'xls', accept_multiple_files = Fa
 
 st.divider()
 
-st.markdown("Subí el **listado de legajos** (no hay que poner restricciones sobre el archivo).")
+st.markdown("Subí el **listado de legajos** (no hay que poner restricciones sobre el archivo). Recordá eliminar el total de empleados abajo de todo en la planilla.")
 st.markdown("**Camino**: Informes > Informes de Empleado > Empleados por Legajo | **Formato**: Excel (Tabular).")
 archivo_legajos = st.file_uploader("", type = 'xls', accept_multiple_files = False, key = "archivo_legajos")
 
