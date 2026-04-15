@@ -16,7 +16,7 @@ archivo_planilla = st.file_uploader("", type = 'xls', accept_multiple_files = Fa
 
 st.divider()
 
-st.markdown("Subí el **listado de legajos** (no hay que poner restricciones sobre el archivo). Recordá eliminar el total de empleados abajo de todo en la planilla.")
+st.markdown("Subí el **listado de legajos** (no hay que poner restricciones sobre el archivo).")
 st.markdown("**Camino**: Informes > Informes de Empleado > Empleados por Legajo | **Formato**: Excel (Tabular).")
 archivo_legajos = st.file_uploader("", type = 'xls', accept_multiple_files = False, key = "archivo_legajos")
 
@@ -45,7 +45,9 @@ if archivo_planilla and archivo_legajos and archivo_ausencias and nombre_archivo
     # chequear ausencias
     ausencias_dict = transformar_ausencias_a_dict(archivo_ausencias, es_viaticos=True)
 
-    planilla_viaticos_pos = vi.modificar_reportar_viaticos_en_ausencia(ausencias_dict,planilla_viaticos)
+    planilla_viaticos_pos, inconsistencias = vi.modificar_viaticos_en_ausencia(planilla_viaticos, ausencias_dict)
+
+    vi.reportar_inconsistencias(planilla_viaticos_pos, inconsistencias)
 
     st.badge("Esta es la planilla de viáticos antes de compararla con las ausencias.")
     st.write(planilla_viaticos_pre)
