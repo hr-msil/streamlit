@@ -164,14 +164,20 @@ def normalizar_planilla_viaticos(planilla: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def son_similares(nombre_1, nombre_2, umbral=0.8):
+def son_similares(nombre_1: str, nombre_2: str, umbral = 0.8) -> bool:
+    '''
+    Dados dos nombres, devuelve si son similares
+    '''
     if nombre_1 == nombre_2:
         return True
     # Lo hago así porque no sé si llamar al método SequenceMatcher es costoso
     ratio = difflib.SequenceMatcher(None, nombre_1, nombre_2).ratio()
     return ratio >= umbral
 
-def limpiar_nombre(nombre):
+def limpiar_nombre(nombre: str) -> str:
+    '''
+    Dado un nombre completo, le quitamos las tildes, lo ponemos en mayúsculas y le quitamos apóstrofes o comas intermedias:
+    '''
     nombre = nombre.upper() # mayúsculas
     nombre = re.sub(r"['’]", "", nombre) # quitar comas y apóstrofes
     nombre = re.sub(r",\s", " ", nombre)
@@ -209,18 +215,23 @@ def nombres_coinciden(nombre_1: str, nombre_2: str) -> bool:
                 break
     return coincidencias >= 2
 
-def validar_legajos_y_nombres(planilla: pd.DataFrame,
+def validar_legajos_y_nombres(planilla_viaticos: pd.DataFrame,
                               datos_sistema: pd.DataFrame) -> list[tuple[str,str,str]]:
     '''
+    Dada la planilla_viaticos de viáticos y los datos del sistema con los legajos y nombres de empleados,
+    realizamos las siguientes operaciones:
+    + reportar que no hayan legajos repetidos en viáticos.
+    + que si no se encuentra un empleado en viáticos
+
     '''
-    hay_duplicados = planilla["legajo"].duplicated().any()
+    hay_duplicados = planilla_viaticos["legajo"].duplicated().any()
 
     if hay_duplicados:
-        st.error("Hay legajos duplicados en la planilla de viáticos. Revisar a mano.")
+        st.error("Hay legajos duplicados en la planilla_viaticos de viáticos. Revisar a mano.")
         st.stop()
     
     # 
-    datos_planilla = list(zip(planilla["legajo"],planilla["empleado"]))
+    datos_planilla = list(zip(planilla_viaticos["legajo"],planilla_viaticos["empleado"]))
     
     datos_sistema = datos_sistema[datos_sistema.columns[:2]]
     datos_sistema.columns = ["legajo","empleado"]
@@ -231,7 +242,7 @@ def validar_legajos_y_nombres(planilla: pd.DataFrame,
 
     for legajo,empleado in datos_planilla:        
         
-        # Que empleado_sistema sea None significa que no se halló e legajo en la planilla del sistema
+        # Que empleado_sistema sea None significa que no se halló e legajo en la planilla_viaticos del sistema
         empleado_sistema = datos_sistema.loc[datos_sistema["legajo"] == legajo, "empleado"]
         
         if empleado_sistema.shape[0] == 0:
@@ -272,7 +283,11 @@ def reportar_validacion_legajos(resultados: list[tuple[str,str,str]]):
     else:
         st.write("No se encontraron errores de carga de legajos o nombres.")
         
-def cortar_dias_no_habiles(viaticos,inconsistencias_ausencias):
+def cortar_dias_no_habiles(viaticos: pd.DataFrame, inconsistencias_ausencias: dict[str, list[tuple[str, str]]]):
+    '''
+    Para todos los días no hábiles, se pone en cero el viático y se añade al diccionario de inconsistencias.
+    '''
+
     # Para todos los dias no habiles, poner en 0
     hoy = datetime.today()
     mismo_dia_mes_anterior = hoy - relativedelta(months=1)
@@ -300,12 +315,13 @@ def cortar_dias_no_habiles(viaticos,inconsistencias_ausencias):
     st.write("Se pusieron en cero todos los viáticos que caen en día no hábil. Estos días son: " + lista_a_string(dias_no_habiles))
 
 
-def modificar_reportar_viaticos_en_ausencia(ausencias,planilla_viaticos):
+def modificar_viaticos_en_ausencia(planilla_viaticos: pd.DataFrame, ausencias: dict[str, dict[str, any]]) -> tuple[pd.DataFrame, dict[str, list[tuple[str, str]]]]:
     '''
-    Recibe los diccionarios ausencias y planilla_viaticos
-    Para cada día donde se ausentaron e hicieron horas extras,
-    segun el tipo de ausencia, se pone en 0 la hora extra en planilla_viaticos
-    Dejandolo listo para exportar a csv
+    Recibe los diccionarios ausencias y planilla_viaticos.
+    
+    Para cada día donde se ausentaron y se declaran viáticos,
+    segun el tipo de ausencia, se pone en 0 la cantidad de viáticos en planilla_viaticos
+    Devuelve la planilla modificada y las inconsistencias encontradas.
     '''
     viaticos = planilla_viaticos
     inconsistencias_ausencias = defaultdict(list)
@@ -338,6 +354,13 @@ def modificar_reportar_viaticos_en_ausencia(ausencias,planilla_viaticos):
 
     # cortar_dias_no_habiles(viaticos,inconsistencias_habiles)
     
+    return viaticos, inconsistencias_ausencias
+
+def reportar_inconsistencias(viaticos: pd.DataFrame, inconsistencias_ausencias: dict[str, list[tuple[str, str]]]):
+    '''
+    Dada la planilla de viaticos, reporta las inconsistencias con ausencias.
+    '''
+
     dict_legajo_empleado = viaticos.set_index("legajo")["empleado"].to_dict()
     hoy = datetime.today()
     mismo_dia_mes_anterior = hoy - relativedelta(months=1)
@@ -353,8 +376,6 @@ def modificar_reportar_viaticos_en_ausencia(ausencias,planilla_viaticos):
             for dia, motivo in inconsistencias_legajo:
                 s += f"    - {dia}/{mes}/{anio} | {motivo}\n"   
             st.markdown(s)
-    
-    return viaticos
 
 def transformar_viaticos_a_csv(viaticos: pd.DataFrame):
     resultados = {}
