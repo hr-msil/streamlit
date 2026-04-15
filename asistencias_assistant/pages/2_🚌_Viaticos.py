@@ -12,19 +12,19 @@ st.set_page_config(page_title="Viáticos", page_icon="🚌", layout = 'wide')
 st.markdown("**Versión beta: cualquier cosa rara que encuentres, no dudes en reportarla!**")
 
 st.markdown("Subí la **planilla de viáticos**.")
-archivo_planilla = st.file_uploader("", type = 'xls', accept_multiple_files = False, key = "archivo_planilla")
+archivo_planilla = st.file_uploader("Planilla de viáticos", type = 'xls', accept_multiple_files = False, key = "archivo_planilla")
 
 st.divider()
 
-st.markdown("Subí el **listado de legajos** (no hay que poner restricciones sobre el archivo).")
+st.markdown("Subí el **listado de legajos** (no hay que poner restricciones sobre el archivo). Recordá eliminar los totales al final de la planilla.")
 st.markdown("**Camino**: Informes > Informes de Empleado > Empleados por Legajo | **Formato**: Excel (Tabular).")
-archivo_legajos = st.file_uploader("", type = 'xls', accept_multiple_files = False, key = "archivo_legajos")
+archivo_legajos = st.file_uploader("Listado de legajos", type = 'xls', accept_multiple_files = False, key = "archivo_legajos")
 
 st.divider()
 
 st.markdown("Subí el **listado de ausencias** (puede incluir todas las oficinas). Recordá que hay que hacer el cálculo antes de exportarlo.")
 st.markdown("**Camino**: Informes > Informes de Asistencia > Ausencias por Oficina | **Formato**: Excel Extended o Excel (no tabular).")
-archivo_ausencias = st.file_uploader("", type = 'xls', accept_multiple_files = False, key = "archivo_ausencias")
+archivo_ausencias = st.file_uploader("Listado de ausencias", type = 'xls', accept_multiple_files = False, key = "archivo_ausencias")
 
 st.divider()
 
