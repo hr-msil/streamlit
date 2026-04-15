@@ -166,16 +166,8 @@ def normalizar_planilla_hhee(planilla_hhee):
         df.columns[1]: "nombre",
         df.columns[2]: "tipo_hora"
     }) 
-    
-    # Vemos si están correctos los tipos de hora
 
-    tipo_hora = df["tipo_hora"].astype(str).unique()
-    
-    st.write(tipo_hora)
-    if not np.isin(tipo_hora, ["N", "0.5", "0.1"]).any() or len(tipo_hora) > 3:
-        st.error(f"Se encontraron estos tipos de hora {tipo_hora} y por tal motivo no pudieron ser procesados.")
-        st.stop()
-    
+
     # Tratamiento del legajo    
     df["legajo"] = (
         df["legajo"]
@@ -185,6 +177,15 @@ def normalizar_planilla_hhee(planilla_hhee):
     
     df = df[df["legajo"].astype(str).str.isdigit()]
     df["legajo"] = df["legajo"].astype(str)
+
+    # Vemos si están correctos los tipos de hora
+
+    tipo_hora = df["tipo_hora"].astype(str).unique()
+    
+    st.write(tipo_hora)
+    if not np.isin(tipo_hora, ["N", "0.5", "0.1"]).any() or len(tipo_hora) > 3:
+        st.error(f"Se encontraron estos tipos de hora {tipo_hora} y por tal motivo no pudieron ser procesados.")
+        st.stop()
 
     #Como las columnas que quedan que podrían tener na son de dias y hrs extras, se ponen en cero
     df = df.fillna(0)
