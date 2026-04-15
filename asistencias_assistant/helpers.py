@@ -246,6 +246,7 @@ def transformar_ausencias_a_dict(ausencias,es_viaticos=False) -> dict:
     rows = []
  
     for _, row in df_raw.iterrows():
+        row = row.to_list()
         primera_col = str(row[0]).strip() if pd.notna(row[0]) else ""
 
         # Detectar inicio de un bloque por Oficina
