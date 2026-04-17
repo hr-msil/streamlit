@@ -101,7 +101,7 @@ def limpiar(data: pd.DataFrame) -> defaultdict:
   """
   d = defaultdict(list)
 
-  data = data.iloc[10:].reset_index(drop=True)
+  data = data.iloc[9:].reset_index(drop=True)
   data = data.dropna(subset=[data.columns[0], data.columns[1]],how='all')
 
   cant_filas = data.shape[0]
