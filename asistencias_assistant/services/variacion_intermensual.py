@@ -2,6 +2,7 @@ from datetime import datetime,timedelta
 import pandas as pd
 import numpy as np
 from collections import defaultdict
+import streamlit as st
 
 
 ######################
@@ -99,6 +100,9 @@ def limpiar(data: pd.DataFrame) -> defaultdict:
   :return: Diccionario con legajo como clave y una lista de valores de la forma [nombre, oficina, legajo, cant_horas_86, valor_horas_86, cant_horas_87...]
   """
   d = defaultdict(list)
+
+  data = data.iloc[10:].reset_index(drop=True)
+  data = data.dropna(subset=[data.columns[0], data.columns[1]],how='all')
 
   cant_filas = data.shape[0]
   oficina = ""
