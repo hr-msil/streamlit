@@ -102,7 +102,7 @@ def limpiar(data: pd.DataFrame) -> defaultdict:
 
   data = data.iloc[9:].reset_index(drop=True)
   data = data.dropna(subset=[data.columns[0], data.columns[1]],how='all')
-  st.write(data.head())
+
 
   cant_filas = data.shape[0]
   oficina = ""
@@ -184,6 +184,8 @@ def agregar_liquidacion_extra(d: defaultdict, data: pd.DataFrame) -> None:
   data (DataFrame): DataFrame del archivo .xls correspondiente a la liquidación extra del mes
   """
 
+  data = data.iloc[9:].reset_index(drop=True)
+  data = data.dropna(subset=[data.columns[0], data.columns[1]],how='all')
   cant_filas = data.shape[0]
   tipo_hora_extra = ""
   oficina = ""
