@@ -77,7 +77,7 @@ def transformar_hhee_a_csv(df: pd.DataFrame):
 
 def eliminar_legajo_sin_hhee(df: pd.DataFrame) -> pd.DataFrame:
    
-   df = df[(df["horas_normales"] != 0) & (df["horas_50"] != 0) & (df["horas_100"] != 0)]
+   df = df[(df["horas_normales"] != 0) | (df["horas_50"] != 0) | (df["horas_100"] != 0)]
 
    return df
 
