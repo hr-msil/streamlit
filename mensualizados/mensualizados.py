@@ -61,7 +61,9 @@ def dividir_oficinas(df: pd.DataFrame) -> tuple[list[pd.DataFrame], list[str]]:
 
     return df_oficinas,oficinas_nan
 
-
+tipos_datos = {
+    'Bonificación':str
+}
 
 
 #############
@@ -145,7 +147,7 @@ elif opcion == "AMBIENTE Y ESPACIO PUBLICO" or opcion == "DESARROLLO HUMANO Y DE
 
         else:
 
-            df = pd.read_excel(archivo_1,sheet_name=hoja)
+            df = pd.read_excel(archivo_1,sheet_name=hoja,dtype=tipos_datos)
 
             df["Categoría"] = df["Categoría"].replace("NO CATEGORIZADO", 999)
 
@@ -156,7 +158,14 @@ elif opcion == "AMBIENTE Y ESPACIO PUBLICO" or opcion == "DESARROLLO HUMANO Y DE
             for df_oficina in df_oficinas:
                 
 
-                df_oficina = df_oficina[(df_oficina["Evaluación"] != "Enviar nota de designación") & (~df_oficina["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False) | (df_oficina["Fecha Egreso Cargo"].astype(str) != "Art. 32"))]
+                # Opción B: excluir filas donde se cumple CUALQUIERA de las dos condiciones de fecha
+                df_oficina = df_oficina[
+                    (df_oficina["Evaluación"] != "Enviar nota de designación") &
+                    ~(
+                        df_oficina["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False) |
+                        (df_oficina["Fecha Egreso Cargo"].astype(str) == "Art. 32")
+                    )
+                ]
                 if df_oficina.shape[0] == 0: continue
                 df_oficina = borrar_ultimas_columnas(df_oficina,5)
                 df_oficina = df_oficina.reset_index(drop=True)
@@ -280,7 +289,14 @@ else:
                     
 
                     df_oficina = df_oficina.reset_index(drop=True)
-                    df_oficina = df_oficina[(df_oficina["Evaluación"] != "Enviar nota de designación") & (~df_oficina["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False) | (df_oficina["Fecha Egreso Cargo"].astype(str) != "Art. 32"))]
+                    # Opción B: excluir filas donde se cumple CUALQUIERA de las dos condiciones de fecha
+                    df_oficina = df_oficina[
+                        (df_oficina["Evaluación"] != "Enviar nota de designación") &
+                        ~(
+                            df_oficina["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False) |
+                            (df_oficina["Fecha Egreso Cargo"].astype(str) == "Art. 32")
+                        )
+                    ]
                     if df_oficina.shape[0] == 0: continue
                     oficina = df_oficina["Oficina"].unique()  # Array de valores únicos
                     df_oficina = borrar_ultimas_columnas(df_oficina,5)
@@ -360,7 +376,14 @@ else:
                 else:
 
                     df = df.reset_index(drop=True)
-                    df = df[(df["Evaluación"] != "Enviar nota de designación") & (~df["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False)) ]
+                    # Opción B: excluir filas donde se cumple CUALQUIERA de las dos condiciones de fecha
+                    df = df[
+                        (df["Evaluación"] != "Enviar nota de designación") &
+                        ~(
+                            df["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False) |
+                            (df["Fecha Egreso Cargo"].astype(str) == "Art. 32")
+                        )
+                    ]
                     df = borrar_ultimas_columnas(df,5)
                     df = df.reset_index(drop=True)
                     df = df.fillna('')
