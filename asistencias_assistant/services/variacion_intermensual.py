@@ -311,14 +311,14 @@ def agregar_total(df_anterior: pd.DataFrame) -> None:
   :param df_anterior: dataframe del mes anterior
   :param df_actual: dataframe del mes actual
   """
+  copia_df = df_anterior
 
-  df_anterior["Total horas"] = df_anterior["HorasExtra_86"] + df_anterior["HorasExtra_87"] + df_anterior["HorasExtra_89"]
+  copia_df["Total horas"] = copia_df["HorasExtra_86"] + copia_df["HorasExtra_87"] + copia_df["HorasExtra_89"]
   #df_actual["Total horas"] = df_actual["HorasExtra_86"] + df_actual["HorasExtra_87"] + df_actual["HorasExtra_89"]
 
-  df_anterior["Total valor"] = df_anterior["Valor_86"] + df_anterior["Valor_87"] + df_anterior["Valor_89"]
+  copia_df["Total valor"] = copia_df["Valor_86"] + copia_df["Valor_87"] + copia_df["Valor_89"]
   #df_actual["Total valor"] = df_actual["Valor_86"] + df_actual["Valor_87"] + df_actual["Valor_89"]
-  return df_anterior
-
+  return copia_df
 # ----------- Archivos necesarios ------------------
 # Son los archivos que van a ser devueltos en formato .xlsx
 
