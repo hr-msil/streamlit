@@ -304,7 +304,7 @@ def armar_data_set(d: defaultdict) -> pd.DataFrame:
 
   return dataSetLimpio
 
-def agregar_total(df_anterior: pd.DataFrame, df_actual:pd.DataFrame) -> None:
+def agregar_total(df_anterior: pd.DataFrame) -> None:
   """
   Agrega las columnas de totales, donde para su respectiva columna se suma la respectiva columna del dataframe anterior y del actual
   
@@ -313,11 +313,11 @@ def agregar_total(df_anterior: pd.DataFrame, df_actual:pd.DataFrame) -> None:
   """
 
   df_anterior["Total horas"] = df_anterior["HorasExtra_86"] + df_anterior["HorasExtra_87"] + df_anterior["HorasExtra_89"]
-  df_actual["Total horas"] = df_actual["HorasExtra_86"] + df_actual["HorasExtra_87"] + df_actual["HorasExtra_89"]
+  #df_actual["Total horas"] = df_actual["HorasExtra_86"] + df_actual["HorasExtra_87"] + df_actual["HorasExtra_89"]
 
   df_anterior["Total valor"] = df_anterior["Valor_86"] + df_anterior["Valor_87"] + df_anterior["Valor_89"]
-  df_actual["Total valor"] = df_actual["Valor_86"] + df_actual["Valor_87"] + df_actual["Valor_89"]
-
+  #df_actual["Total valor"] = df_actual["Valor_86"] + df_actual["Valor_87"] + df_actual["Valor_89"]
+  return df_anterior
 
 # ----------- Archivos necesarios ------------------
 # Son los archivos que van a ser devueltos en formato .xlsx
@@ -643,3 +643,4 @@ def obtener_mes_anterior():
     mes_ant = mes_anterior_fecha.strftime("%Y-%m")
 
     return mes_ant
+
