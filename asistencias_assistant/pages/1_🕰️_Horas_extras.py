@@ -12,6 +12,8 @@ import services.chequeo_legajos as cl
 import services.extraextra as xx
 import services.variacion_intermensual as v_mam
 
+
+
 import services.chequeo_legajos as cl
 
 st.set_page_config(page_title="Horas extras", page_icon="🕰️", layout = 'wide')
@@ -97,6 +99,7 @@ with tab2:
             resumen_planilla_final = a_csv.eliminar_legajo_sin_hhee(resumen_planilla_pos) 
 
             # Transformamos para descarga
+            #csv = resumen_planilla_pos.to_csv(index=False).encode('latin1')
             csv = resumen_planilla_final.to_csv(index=False).encode('latin1')
             st.download_button(
                 label="Descargar CSV",
@@ -219,14 +222,14 @@ with tab4:
             dfs_2.append(df_2)
         
         #for i,df in enumerate(dfs_1):
-        #    df.columns =  ["Muni", "Legajo", "Nombre", "Liq","Base",
+        #   df.columns =  ["Muni", "Legajo", "Nombre", "Liq","Base",
         #            "Cant horas","Valor por hora","Saporte",
         #            "Fecha","Valor total"]
             
         #    if i == 0:
         #        mes_anterior = v_mam.limpiar(df)
-        #    else:
-        #        v_mam.agregar_liquidacion_extra(mes_anterior, df)
+        #   else:
+        #       v_mam.agregar_liquidacion_extra(mes_anterior, df)
 
         for j,df in enumerate(dfs_2):
             df.columns = ["Muni", "Legajo", "Nombre", "Liq","Base",
@@ -241,7 +244,10 @@ with tab4:
         #dataSetLimpio_mes1 = v_mam.armar_data_set(mes_anterior)
         dataSetLimpio_mes2 = v_mam.armar_data_set(mes_actual)
 
-        #v_mam.agregar_total(dataSetLimpio_mes1,dataSetLimpio_mes2)
+        
+
+
+        resumen_personas = v_mam.agregar_total(dataSetLimpio_mes2)
 
         #df_area = v_mam.unir_oficinas(dataSetLimpio_mes1,dataSetLimpio_mes2)
 
@@ -252,18 +258,19 @@ with tab4:
         #output1 = io.BytesIO()
         #output2 = io.BytesIO()
         output3 = io.BytesIO()
-        #output4 = io.BytesIO()
+        output4 = io.BytesIO()
 
         #df_area.to_excel(output1, index=False)
         #df_personas.to_excel(output2, index=False)
         df_area_total.to_excel(output3, index = False)
+        resumen_personas.to_excel(output4, index = False)
         #dataSetLimpio_mes2.to_excel(output4, index= False)
 
         mes_anterior_str = v_mam.obtener_mes_anterior()
         #nombre_archivo_1 = f"Dif. horas extras por oficina_{mes_anterior_str}.xlsx"
         #nombre_archivo_2 = f"Dif. horas extras por persona_{mes_anterior_str}.xlsx"
         nombre_archivo_3 = f"Resumen horas extras mes actual_{mes_anterior_str}.xlsx"
-        #nombre_archivo_4 = f"Reporte por empleado de horas extras mes actual_{mes_anterior_str}.xlsx"
+        nombre_archivo_4 = f"Reporte por empleado de horas extras mes actual_{mes_anterior_str}.xlsx"
 
         #st.download_button(
          #   label="📄 Descargar planilla de diferencias de horas extras por oficina",
@@ -280,15 +287,15 @@ with tab4:
         #)
 
         st.download_button(
-        label="📄 Descargar resumen por oficina para el mes actual",
-        data=output3.getvalue(),
-        file_name=nombre_archivo_3,
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            label="📄 Descargar resumen por oficina para el mes actual",
+            data=output3.getvalue(),
+            file_name=nombre_archivo_3,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-        #st.download_button(
-        #label="📄 Descargar planilla de horas extras por empleado",
-        #data=output4.getvalue(),
-        #file_name=nombre_archivo_4,
-        #mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        #)
+        st.download_button(
+            label="📄 Descargar planilla de horas extras por empleado",
+            data=output4.getvalue(),
+            file_name=nombre_archivo_4,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
