@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import io
-
+root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(root))
 from services.guardiasMedicas import armar_listados
 
 st.subheader("🩺 Guardias médicas")
