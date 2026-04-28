@@ -27,9 +27,9 @@ codigos_ausencias_no_descontables_hhee = (set([1,4,5,6,7,8,9,10,11,12,13,
 #################################
 
 def obtener_dias_feriados(anio: int, mes: int) -> list[int]:
-    #BASE_DIR = Path(__file__).resolve().parent.parent
-    #ruta_feriados = BASE_DIR / "feriados.txt"
-    ruta_feriados = "feriados.txt"
+    BASE_DIR = Path(__file__).resolve().parent
+    ruta_feriados = BASE_DIR / "feriados.txt"
+    #ruta_feriados = "feriados.txt"
     with open(ruta_feriados, encoding="utf-8") as f: 
         texto = f.read().replace("NaN", "null")
     
