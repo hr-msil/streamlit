@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import io
 from pathlib import Path
+import sys
+
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 from services.guardiasMedicas import armar_listados
