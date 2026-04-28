@@ -13,8 +13,9 @@ st.badge("Frente a cualquier bug o problema, contactar al equipo de Datos.", ico
 st.divider()
 
 # Acciones rápidas
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 col1.page_link("pages/1_🕰️_Horas_extras.py", label="Para la carga y control de hh.ee.", icon="🕰️")
 col2.page_link("pages/2_🚌_Viaticos.py", label="Para el control de viaticos.", icon="🚌")
 col3.page_link("pages/3_✅_Descuentos.py", label="Para el proceso de descuentos.", icon="✅")
+col4.page_link("pages/4_🩺_Guardias_medicas.py",label = "Para el proceso de Guardias Médicas", icon = "🩺")
