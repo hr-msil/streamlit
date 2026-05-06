@@ -26,7 +26,7 @@ def escribir_acto_admin(documento, reso, exp):
 
     documento.add_paragraph()
     parrafo_acta = documento.add_paragraph()
-    run_acta = parrafo_acta.add_run(f'Se deja en constancia que en el día de la fecha los agentes fueron notificados de la resolución {reso} contenida en el expediente {exp} mediante la cual se _______________ a los mismos.')
+    run_acta = parrafo_acta.add_run(f'Se deja en constancia que en el día de la fecha los agentes fueron notificados de la resolución {reso} contenida en el expediente {exp} mediante la cual se _____________________ a los mismos.')
     parrafo_acta.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
     parrafo_firma = documento.add_paragraph()
