@@ -6,6 +6,25 @@ from docx.shared import Mm
 import xlrd
 from datetime import date
 import pandas as pd
+import re
+
+def extraer_reso_y_expediente(texto):
+    texto = texto.strip()
+
+    # Buscar dónde empieza el nroDeExpediente
+    match = re.search(r'\bEX-\d{4}-', texto)
+    if not match:
+        return None, None
+
+    inicio_expte = match.start()
+
+    # Cortamos sin limpiar a ciegas
+    nro_reso = texto[:inicio_expte].rstrip(" -")  # solo eliminamos guiones o espacios al final del reso
+    nro_expte = texto[inicio_expte:].lstrip(" -") # solo eliminamos guiones o espacios al principio del expte
+    nro_expte = nro_expte.split('.pdf')[0]
+
+    return nro_expte,nro_reso
+
 
 def set_table_font_size(table, size_pt):
     """
@@ -27,6 +46,8 @@ def armar_esqueleto_dos(documento, oficina, encabezados_excel, nombre_expediente
     :param oficina: [int, str], array con el número de la oficina y el nombre de la oficina
     :param encabezados_excel: list[str] lista con los nombres de los encabezados del excel
     """
+
+    
 
     # El nombre del anexo correspondiente a la oficina es del tipo "oficina - nombre de la oficina"
     if nombre_expediente and not separar:
@@ -73,6 +94,7 @@ def armar_anexo_dosV2(planilla, separar):
     :param separar: str si es true, devolvemos un archivo por oficina
     """
     nombre_expediente = planilla.name.split("xls")[0]
+    reso, exp = extraer_reso_y_expediente(nombre_expediente)
     documento = crear_documento(nombre_expediente)
     wb = xlrd.open_workbook(file_contents = planilla.read())
     ws = wb.sheet_by_index(0)
@@ -96,7 +118,7 @@ def armar_anexo_dosV2(planilla, separar):
         if numero_oficina != oficina_anterior_num and nombre_oficina != oficina_anterior_nom:
             #Si me encuentro con una oficina distinta tengo dos caminos: si se decide separar, 
             #creamos un documento nuevo, sino, seguimos en el nuevo documento pero con una hoja aparte
-            
+            escribir_acto_admin(documento,reso, exp)
             if separar:
                 documentos.append(documento)
                 documento = crear_documento(nombre_expediente)
@@ -125,9 +147,26 @@ def armar_anexo_dosV2(planilla, separar):
                 fila[i - 2].text = str(valor_celda) if valor_celda else ""
             elif isinstance(valor_celda,float):
                 fila[i - 2].text = str(int(valor_celda)) if valor_celda else "" #para que nos nos aparezcan decimales
-
+    escribir_acto_admin(documento,reso, exp)
     documentos.append(documento)
     return documentos
+
+def escribir_acto_admin(documento, reso, exp):
+
+    documento.add_paragraph()
+
+    parrafo_acta = documento.add_paragraph()
+    run_acta = parrafo_acta.add_run(f'Se deja en constancia que en el día de la fecha los agentes fueron notificados de la resolución {reso} contenida en el expediente {exp} mediante la cual se _______________ a los mismos.')
+    parrafo_acta.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+
+    parrafo_firma = documento.add_paragraph()
+    run_firma = parrafo_firma.add_run("FIRMA")
+    parrafo_firma.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+
+    parrafo_aclaracion = documento.add_paragraph()
+    run_aclaracion = parrafo_aclaracion.add_run("ACLARACIÓN")
+    parrafo_aclaracion = WD_PARAGRAPH_ALIGNMENT.LEFT
+
 
 
 def crear_documento(nombre_expediente):
@@ -154,12 +193,20 @@ def crear_documento(nombre_expediente):
     section.footer_distance = Mm(12.7)
     section.orientation = WD_ORIENT.LANDSCAPE
 
+    parrafo_acta = documento.add_paragraph()
+    run_acta = parrafo_acta.add_run("ACTA DE NOTIFICACIÓN")
+    run_acta.bold = True
+    run_acta.underline = True
+    run_acta.font.size = Pt(16)
+    parrafo_acta.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
     parrafo_exp = documento.add_paragraph()
     run_exp = parrafo_exp.add_run(nombre_expediente)
     run_exp.bold = True
     run_exp.underline = True
     run_exp.font.size = Pt(16)
     parrafo_exp.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
 
     return documento
 
