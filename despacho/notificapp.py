@@ -11,6 +11,8 @@ from pdfminer.high_level import extract_text
 import re
 from io import BytesIO
 
+
+
 def obtener_expdte(filename):
     expdte_pdf = filename.split(' - ')[1]
     expdte = expdte_pdf.split('.')[0]
@@ -19,6 +21,22 @@ def obtener_expdte(filename):
 def obtener_reso(filename):
     reso = filename.split(' - ')[0]
     return reso
+
+def escribir_acto_admin(documento, reso, exp):
+
+    documento.add_paragraph()
+    parrafo_acta = documento.add_paragraph()
+    run_acta = parrafo_acta.add_run(f'Se deja en constancia que en el día de la fecha los agentes fueron notificados de la resolución {reso} contenida en el expediente {exp} mediante la cual se _______________ a los mismos.')
+    parrafo_acta.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+
+    parrafo_firma = documento.add_paragraph()
+    run_firma = parrafo_firma.add_run("FIRMA")
+    parrafo_firma.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
+
+    parrafo_aclaracion = documento.add_paragraph()
+    run_aclaracion = parrafo_aclaracion.add_run("ACLARACIÓN")
+    parrafo_aclaracion = WD_PARAGRAPH_ALIGNMENT.LEFT
+
 
 def extraer_reso_y_expediente(texto):
     texto = texto.strip()
@@ -35,7 +53,8 @@ def extraer_reso_y_expediente(texto):
     nro_expte = texto[inicio_expte:].lstrip(" -") # solo eliminamos guiones o espacios al principio del expte
     nro_expte = nro_expte.split('.pdf')[0]
 
-    return nro_reso, nro_expte
+    #return nro_reso, nro_expte
+    return nro_expte,nro_reso
 
 def obtener_nombres_y_legajos(file):
     trabajadores = {} #key = legajo, clave = nombre completo
@@ -80,9 +99,17 @@ def obtener_datos(st_archivos):
                                         "trabajadores": trabajadores
                                     }
     return datos_expdtes
+# ACTA NOTIFICACION
 
 def armar_hoja(documento,expediente,resolucion,trabajadores):
      # Encabezado del expediente centrado y en negrita
+    parrafo_acta = documento.add_paragraph()
+    run_acta = parrafo_acta.add_run("ACTA DE NOTIFICACIÓN")
+    run_acta.bold = True
+    run_acta.underline = True
+    run_acta.font.size = Pt(16)
+    parrafo_acta.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
     parrafo_exp = documento.add_paragraph()
     run_exp = parrafo_exp.add_run(expediente)
     run_exp.bold = True
@@ -98,6 +125,8 @@ def armar_hoja(documento,expediente,resolucion,trabajadores):
     run_res.font.size = Pt(16)
     parrafo_res.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
+    
+
     # Tabla
     tabla = documento.add_table(rows=1, cols=3)
     tabla.style = 'Table Grid'  # Bordes visibles
@@ -112,6 +141,8 @@ def armar_hoja(documento,expediente,resolucion,trabajadores):
         fila[0].text = str(legajo)
         fila[1].text = nombre
         fila[2].text = ""  # Vacío para firma y fecha
+
+    escribir_acto_admin(documento, expediente, resolucion)
 
     documento.add_page_break()
 
