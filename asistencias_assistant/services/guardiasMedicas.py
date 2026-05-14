@@ -68,9 +68,7 @@ anio_anterior = primer_dia_mes_anterior.year
 
 dias_feriados_mes = obtener_dias_feriados(primer_dia_mes_anterior.year,primer_dia_mes_anterior.month)
 
-#lectura de archivo json con códigos de guardias de técnicos
-with open(r"C:\Users\mmaurer\Desktop\Proyectos Python\asistencias_assistant\horarios_tecnicos.json", "r", encoding = "utf-8") as f:
-    dicc_horarios_tecnicos = json.load(f)
+
 
 
 
