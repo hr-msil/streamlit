@@ -511,72 +511,7 @@ def reportar_legajos_sin_horario(legajos, df_horarios_ME):
         lista_outputs.append(reporte)
     return lista_outputs
     
-def leer_archivo_horarios_tecnicos(archivo_horarios_tecnicos):
-    horarios_tecnicos_guardia = pd.read_excel(archivo_horarios_tecnicos)
-    horarios_tecnicos_guardia = horarios_tecnicos_guardia.iloc[:,0:2]
-    return horarios_tecnicos_guardia
-
-def leer_novedades_tecnicos_guardia(archivo_novedades_tecnicos_guardia):
-    #Estos son los técnicos que reciben las bonificaciones
-    novedades_tecnicos_guardia = pd.read_excel(archivo_novedades_tecnicos_guardia)
-    novedades_tecnicos_guardia["oficina_limpio"] = novedades_tecnicos_guardia["OFICINA"].str.split(" - ").str[1].astype('int')
-    novedades_tecnicos_guardia["legajo_limpio"] = novedades_tecnicos_guardia["LEGAJO"].str.split("-") .str[0].astype('int')
-
-    novedades_tecnicos_guardia_oficinas = novedades_tecnicos_guardia[novedades_tecnicos_guardia["oficina_limpio"].isin(oficinas_tecnicos)]
-    return novedades_tecnicos_guardia_oficinas
-
-def bonif_tecnicos(ausencias):
-    novedades_tecnicos = leer_novedades_tecnicos_guardia("novedades_tecnicos_mu.xls")
-    horarios_tecnicos = leer_archivo_horarios_tecnicos("horariosTecnicosDeGuardia.xlsx")
-    data_tecnicos = pd.merge(novedades_tecnicos, horarios_tecnicos, how="left", left_on=["legajo_limpio"], right_on=["labo_Codigo"])
-
-    # Obtener feriados del mes anterior
-    hoy = date.today()
-    primer_dia_mes_anterior = (hoy.replace(day=1) - timedelta(days=1)).replace(day=1)
-    dias_feriados_mes = obtener_dias_feriados(primer_dia_mes_anterior.year, primer_dia_mes_anterior.month)
-
-    # Convertir feriados a día de semana (0=lunes, 6=domingo)
-    feriados_como_fechas = [
-        obtener_dia_semana(d,primer_dia_mes_anterior.month, primer_dia_mes_anterior.year)
-        for d in dias_feriados_mes
-    ]
-    print(f"Los días feriados del mes corresponden a los días {feriados_como_fechas}")
-
-    cobra_guardias_feriados = []
-
-    for row in data_tecnicos.itertuples():
-        legajo = str(row.legajo_limpio)
-        horario_legajo = str(row.hora_Codigo)
-
-        try:
-            horario_legajo = str(int(float(row.hora_Codigo))).strip()
-        except (ValueError, TypeError):
-            horario_legajo = None
-        
-        dias_que_trabaja = dicc_horarios_tecnicos.get(horario_legajo, None)
-        if dias_que_trabaja is None:
-            print(f"Legajo {legajo}: no se encontró horario '{horario_legajo}'")
-            continue
-        
-        trabaja_feriado = set(dias_que_trabaja) and set(feriados_como_fechas)
-
-        if trabaja_feriado:
-
-            if legajo in ausencias.keys():
-                if set(dias_feriados_mes) and set(ausencias[legajo]["dias"]):
-                    #tiene alguna ausencia el día de feriado
-                    continue
-                else:
-                    #corresponde cobrar guardias feriados
-                    cobra_guardias_feriados.append(legajo) 
-            else:
-                cobra_guardias_feriados.append(legajo)
-
-    return cobra_guardias_feriados
 
 
-    
-if __name__ == "__main__":
 
-    df_res = listadoPorEmpleados("listemploficinanontabular.xls")
-    print(df_res.head(15))
+
