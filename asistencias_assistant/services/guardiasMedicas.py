@@ -9,8 +9,7 @@ from collections import defaultdict
 import streamlit as st
 
 import calendar
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-#Esto es porque crear_df del script chequeo_legajos.py usa helpers.py que no esta en la misma carpeta
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))#Esto es porque crear_df del script chequeo_legajos.py usa helpers.py que no esta en la misma carpeta
 from helpers import crear_df
 from helpers import obtener_dias_feriados
 
@@ -70,8 +69,8 @@ anio_anterior = primer_dia_mes_anterior.year
 dias_feriados_mes = obtener_dias_feriados(primer_dia_mes_anterior.year,primer_dia_mes_anterior.month)
 
 #lectura de archivo json con códigos de guardias de técnicos
-#with open(r"C:\Users\mmaurer\Desktop\Proyectos Python\asistencias_assistant\horarios_tecnicos.json", "r", encoding = "utf-8") as f:
-#    dicc_horarios_tecnicos = json.load(f)
+with open(r"C:\Users\mmaurer\Desktop\Proyectos Python\asistencias_assistant\horarios_tecnicos.json", "r", encoding = "utf-8") as f:
+    dicc_horarios_tecnicos = json.load(f)
 
 
 
@@ -165,14 +164,18 @@ def leer_novedades(novedades_excel:str) -> pd.DataFrame:
 
     return novedades
 
-def leer_horarios(horarios_excel: str, df_novedades) -> pd.DataFrame:
+def leer_horarios(horarios_excel: str, df_novedades) -> pd.DataFrameataFrame:
     '''
     Devuelve los horarios de los medicos que hacen guardia
     '''
     df = pd.read_excel(horarios_excel)
-    df["legajo_limpio"] = df["LEGAJO"].str.split("-").str[0].astype('int')
+    df.columns = ["Legajo", "Nombre", "Desde", "Hasta", "Tipo","Ficha", "Descripción", "unnamed"]
+    st.write(df.head())
+    st.write(df.columns)
+    
+    df["legajo_limpio"] = df["Legajo"].str.split("-").str[0].astype('int')
 
-    df["codigo_horario"] = df["Descripción del Horario"].str.split(" - ").str[0].astype('int')
+    df["codigo_horario"] = df["Descripción"].str.split(" - ").str[0].astype('int')
     
     #df = df[df["legajo_limpio"].isin(df_novedades["legajo_limpio"])]
 
@@ -470,7 +473,7 @@ def armar_listados(archivo_novedades,archivo_horarios_por_ofi, archivo_ausencias
     empleados_por_ofi = listadoPorEmpleados(archivo_listado_empleados)
     df_tecnicos = empleados_por_ofi[empleados_por_ofi["Oficina"].isin(oficinas_tecnicos)]
 
-    df_horarios_tecnicos = pd.merge(df_tecnicos,horarios_guardias[["Descripción del Horario","legajo_limpio","codigo_horario"]],how='left',left_on=["Legajo"], right_on=["legajo_limpio"])
+    df_horarios_tecnicos = pd.merge(df_tecnicos,horarios_guardias[["Descripción","legajo_limpio","codigo_horario"]],how='left',left_on=["Legajo"], right_on=["legajo_limpio"])
 
     cant_dias_en_mes = contar_dias(primer_dia_mes_anterior.year,primer_dia_mes_anterior.month)
     #Si a horarios guardias comento la lista que filtra por novedades me da lo mismo que hacer el merge
@@ -573,3 +576,7 @@ def bonif_tecnicos(ausencias):
 
 
     
+if __name__ == "__main__":
+
+    df_res = listadoPorEmpleados("listemploficinanontabular.xls")
+    print(df_res.head(15))
