@@ -113,7 +113,7 @@ opcion = st.selectbox(
 if opcion == "":
     st.subheader("IMPORTANTE❗: seleccionar el área antes de continuar")
 
-elif opcion == "AMBIENTE Y ESPACIO PUBLICO" or opcion == "DESARROLLO HUMANO Y DEPORTES" or opcion == "EDUCACION, CULTURA Y TRABAJO":
+elif opcion == "DESARROLLO HUMANO Y DEPORTES" or opcion == "EDUCACION, CULTURA Y TRABAJO":
 
     #En caso de ser de alguna de estas oficinas, separamos el archivo por oficinas y retornamos tantos archivos como oficinas COMPLETAS haya.
 
