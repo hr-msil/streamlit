@@ -168,8 +168,7 @@ def leer_horarios(horarios_excel: str, df_novedades) -> pd.DataFrame:
     '''
     df = pd.read_excel(horarios_excel)
     df.columns = ["Legajo", "Nombre", "Desde", "Hasta", "Tipo","Ficha", "Descripción", "unnamed"]
-    st.write(df.head())
-    st.write(df.columns)
+   
     
     df["legajo_limpio"] = df["Legajo"].str.split("-").str[0].astype('int')
 
@@ -357,11 +356,8 @@ def chequeo_PG_y_quinta_guardia(df_horarios_ME:pd.DataFrame,ausencias:dict,cant_
             if legajo in ausencias.keys():
                 dias_faltas = ausencias[legajo]["dias_escritos"]
                 cant_faltas_en_guardia = dias_faltas.count(dia_horario_leg)
-                if legajo == '65830': 
-                    #Tiene una llegada tarde el día que hace guardia
-                    st.write(f"Día de guardia del legajo: {dia_horario_leg}")
-                    st.write(f"Los días en que faltó el legajo son: {dias_faltas}")
-                    st.write(f"La cant de días que  el legajo faltó en su día de guardia: {cant_faltas_en_guardia}")
+                
+                 
 
                 
                 if cant_dias_en_mes_horario == 5:
@@ -378,10 +374,7 @@ def chequeo_PG_y_quinta_guardia(df_horarios_ME:pd.DataFrame,ausencias:dict,cant_
 
             else:
                 #TODO tendría que ver a cuáles agrega acá porque les falta horario de guardia
-                if legajo == '65830': 
-                    st.write(f"Día de guardia del legajo: {dia_horario_leg}")
-                    st.write(f"Los días en que faltó el legajo son: {dias_faltas}")
-                    st.write(f"La cant de días que  el legajo faltó en su día de guardia: {cant_faltas_en_guardia}")
+               
                 if cant_dias_en_mes_horario == 5: legajosME_que_cobran_quinta_guardia.append(legajo)
         else:
             legajos_sin_horario.append(legajo)
