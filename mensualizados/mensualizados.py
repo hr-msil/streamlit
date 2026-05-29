@@ -111,137 +111,10 @@ opcion = st.selectbox(
 )
 
 if opcion == "":
+
     st.subheader("IMPORTANTE❗: seleccionar el área antes de continuar")
-
-elif opcion == "DESARROLLO HUMANO Y DEPORTES" or opcion == "EDUCACION, CULTURA Y TRABAJO":
-
-    #En caso de ser de alguna de estas oficinas, separamos el archivo por oficinas y retornamos tantos archivos como oficinas COMPLETAS haya.
-
-    st.subheader(f"📂Archivo de mensualizados del área {opcion}")
-
-    st.markdown("Subir el archivo de mensualizados")
-
-    archivo_1 = st.file_uploader("Seleccionar el archivo de mensualizados", type=["xlsx", "xls"], key="archivo1",accept_multiple_files=False)
-
-    if archivo_1:
-
-        excel_file = pd.ExcelFile(archivo_1)
-
-        nombres_hojas = excel_file.sheet_names
-        opciones_hojas = [""] + nombres_hojas
-        
-
-        hoja = st.selectbox(
-        "Elegir hoja que se quiere procesar",
-        opciones_hojas
-        )
-
-        if hoja == "":
-
-            st.subheader("IMPORTANTE❗: seleccionar la hoja antes de continuar")
-
-        elif hoja == "HOJA":
-
-            st.subheader("Esta hoja no puede ser procesada")
-
-
-        else:
-
-            df = pd.read_excel(archivo_1,sheet_name=hoja,dtype=tipos_datos)
-
-            df["Categoría"] = df["Categoría"].replace("NO CATEGORIZADO", 999)
-
-
-            df_oficinas,oficinas_nan = dividir_oficinas(df)
-
-            
-            for df_oficina in df_oficinas:
-                
-
-                # Opción B: excluir filas donde se cumple CUALQUIERA de las dos condiciones de fecha
-                df_oficina = df_oficina[
-                    (df_oficina["Evaluación"] != "Enviar nota de designación") &
-                    ~(
-                        df_oficina["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False) |
-                        (df_oficina["Fecha Egreso Cargo"].astype(str) == "Art. 32")
-                    )
-                ]
-                if df_oficina.shape[0] == 0: continue
-                df_oficina = borrar_ultimas_columnas(df_oficina,5)
-                df_oficina = df_oficina.reset_index(drop=True)
-                df_oficina = df_oficina.fillna("")
-                
-
-
-                oficina = df_oficina["Oficina"].unique()  # Array de valores únicos
-
-                outputi = io.BytesIO()
-
-                wb = xlwt.Workbook()
-                ws = wb.add_sheet("Sheet1")
-
-                # Estilo para fecha
-                estilo_fecha = xlwt.XFStyle()
-                estilo_fecha.num_format_str = "DD/MM/YYYY"
-
-                # Escribir encabezados
-                for col_idx, col_name in enumerate(df_oficina.columns):
-                    ws.write(0, col_idx, col_name)
-
-                # Columnas H e I → índices 7 y 8
-                columnas_fecha_idx = [7, 8]
-
-                # Escribir datos
-                for row_idx, row in df_oficina.iterrows():
-                    for col_idx, value in enumerate(row):
-                        if col_idx in columnas_fecha_idx:
-                            ws.write(row_idx + 1, col_idx, value, estilo_fecha)
-                        else:
-                            ws.write(row_idx + 1, col_idx, value)
-
-                                # ===== AUTOFIT =====
-                for col_idx, col_name in enumerate(df_oficina.columns):
-                    
-                    # Largo del encabezado
-                    max_length = len(str(col_name))
-                    
-                    # Largo máximo del contenido
-                    for value in df_oficina.iloc[:, col_idx]:
-                        if value is not None:
-                            length = len(str(value))
-                            if length > max_length:
-                                max_length = length
-                    
-                    # Ajuste (256 es unidad de xlwt, +2 da un pequeño margen)
-                    ws.col(col_idx).width = 256 * (max_length + 2)
-
-                wb.save(outputi)
-                outputi.seek(0)
-
-                nombre_archivo_i = f"{opcion}_oficina_{oficina[0]}_GEDO.xls"
-
-                st.download_button(
-                    label=f"Descargar planilla de la oficina: {oficina[0]}",
-                    data=outputi.getvalue(),
-                    file_name=nombre_archivo_i,
-                    mime="application/vnd.ms-excel"
-                )
-
-            if len(oficinas_nan) != 0:
-                st.markdown(
-                    "Estas son las oficinas que no pueden ser procesadas porque faltan completar "
-                    "la fecha de egreso del cargo para algunas evaluaciones. "
-                    "Por favor completar y volver a realizar procedimiento."
-                )
-
-                st.markdown(
-                    "\n".join(f"- {oficina}" for oficina in oficinas_nan)
-                )
-
         
 else:
-    
-    agree = st.checkbox("Por favor hacer clic en la casilla si se desea separar los archivos resultantes por oficina")
 
     st.subheader(f"📂Archivo de mensualizados del área {opcion}")
 
@@ -275,170 +148,93 @@ else:
 
             df = pd.read_excel(archivo_1,sheet_name=hoja)
                 
-            if agree:
+            df["Categoría"] = df["Categoría"].replace("NO CATEGORIZADO", 999)
 
-                df["Categoría"] = df["Categoría"].replace("NO CATEGORIZADO", 999)
+            #Filtrar dataFrame sacando los que tienen en Evaluación es distinta a enviar nota de designación
 
-                #Filtrar dataFrame sacando los que tienen en Evaluación es distinta a enviar nota de designación
+            df_oficinas,oficinas_nan = dividir_oficinas(df)
 
-                df_oficinas,oficinas_nan = dividir_oficinas(df)
+            
 
+            for df_oficina in df_oficinas:
                 
 
-                for df_oficina in df_oficinas:
-                    
-
-                    df_oficina = df_oficina.reset_index(drop=True)
-                    # Opción B: excluir filas donde se cumple CUALQUIERA de las dos condiciones de fecha
-                    df_oficina = df_oficina[
-                        (df_oficina["Evaluación"] != "Enviar nota de designación") &
-                        ~(
-                            df_oficina["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False) |
-                            (df_oficina["Fecha Egreso Cargo"].astype(str) == "Art. 32")
-                        )
-                    ]
-                    if df_oficina.shape[0] == 0: continue
-                    oficina = df_oficina["Oficina"].unique()  # Array de valores únicos
-                    df_oficina = borrar_ultimas_columnas(df_oficina,5)
-                    df_oficina = df_oficina.reset_index(drop=True)
-                    df_oficina = df_oficina.fillna('')
-
-                    outputi = io.BytesIO()
-
-                    wb = xlwt.Workbook()
-                    ws = wb.add_sheet("Sheet1")
-
-                    # Estilo para fecha
-                    estilo_fecha = xlwt.XFStyle()
-                    estilo_fecha.num_format_str = "DD/MM/YYYY"
-
-                    # Escribir encabezados
-                    for col_idx, col_name in enumerate(df_oficina.columns):
-                        ws.write(0, col_idx, col_name)
-
-                    # Columnas H e I → índices 7 y 8
-                    columnas_fecha_idx = [7, 8]
-
-                    # Escribir datos
-                    for row_idx, row in df_oficina.iterrows():
-                        for col_idx, value in enumerate(row):
-                            if col_idx in columnas_fecha_idx:
-                                ws.write(row_idx + 1, col_idx, value, estilo_fecha)
-                            else:
-                                ws.write(row_idx + 1, col_idx, value)
-
-                    for col_idx, col_name in enumerate(df_oficina.columns):
-                    
-                        # Largo del encabezado
-                        max_length = len(str(col_name))
-                    
-                        # Largo máximo del contenido
-                        for value in df_oficina.iloc[:, col_idx]:
-                            if value is not None:
-                                length = len(str(value))
-                                if length > max_length:
-                                    max_length = length
-                    
-                            # Ajuste (256 es unidad de xlwt, +2 da un pequeño margen)
-                        ws.col(col_idx).width = 256 * (max_length + 2)
-                    
-                    wb.save(outputi)
-                    outputi.seek(0)
-
-                    nombre_archivo_i = f"{opcion}_oficina_{oficina[0]}_GEDO.xls"
-
-                    st.download_button(
-                        label=f"Descargar planilla de la oficina: {oficina[0]}",
-                        data=outputi.getvalue(),
-                        file_name=nombre_archivo_i,
-                        mime="application/vnd.ms-excel"
+                df_oficina = df_oficina.reset_index(drop=True)
+                # Opción B: excluir filas donde se cumple CUALQUIERA de las dos condiciones de fecha
+                df_oficina = df_oficina[
+                    (df_oficina["Evaluación"] != "Enviar nota de designación") &
+                    ~(
+                        df_oficina["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False) |
+                        (df_oficina["Fecha Egreso Cargo"].astype(str) == "Art. 32")
                     )
+                ]
+                if df_oficina.shape[0] == 0: continue
+                oficina = df_oficina["Oficina"].unique()  # Array de valores únicos
+                df_oficina = borrar_ultimas_columnas(df_oficina,5)
+                df_oficina = df_oficina.reset_index(drop=True)
+                df_oficina = df_oficina.fillna('').infer_objects(copy=False)
 
-                if len(oficinas_nan) != 0:
+                outputi = io.BytesIO()
 
-                    st.divider()
+                wb = xlwt.Workbook()
+                ws = wb.add_sheet("Sheet1")
 
-                    st.markdown("Estas son las oficinas que no pueden ser procesadas porque faltan completar la fecha de egreso del cargo para algunas evaluaciones. Por favor completar y volver a realizar procedimiento.")
+                # Estilo para fecha
+                estilo_fecha = xlwt.XFStyle()
+                estilo_fecha.num_format_str = "DD/MM/YYYY"
 
-                    for oficina_nan in oficinas_nan:
-                        st.write("""-""",oficina_nan)
+                # Escribir encabezados
+                for col_idx, col_name in enumerate(df_oficina.columns):
+                    ws.write(0, col_idx, col_name)
+
+                # Columnas H e I → índices 7 y 8
+                columnas_fecha_idx = [7, 8]
+
+                # Escribir datos
+                for row_idx, row in df_oficina.iterrows():
+                    for col_idx, value in enumerate(row):
+                        if col_idx in columnas_fecha_idx:
+                            ws.write(row_idx + 1, col_idx, value, estilo_fecha)
+                        else:
+                            ws.write(row_idx + 1, col_idx, value)
+
+                for col_idx, col_name in enumerate(df_oficina.columns):
                 
-
-            else:
-
-                df_nan = df[(df["Fecha Egreso Cargo"].isna()) & (df["Evaluación"] != "Enviar nota de designación") ]
-
-                if df_nan.shape[0] != 0: 
-
-                    #Si falta completar alguna de las filas de Fecha Egreso Cargo, directamente no devolvemos el archivo .xls
-                    st.markdown("No se puede procesar el documento porque faltan completar la fecha de egreso del cargo para algunas evaluaciones. Por favor completar y volver a realizar procedimiento.")
+                    # Largo del encabezado
+                    max_length = len(str(col_name))
                 
-                else:
+                    # Largo máximo del contenido
+                    for value in df_oficina.iloc[:, col_idx]:
+                        if value is not None:
+                            length = len(str(value))
+                            if length > max_length:
+                                max_length = length
+                
+                        # Ajuste (256 es unidad de xlwt, +2 da un pequeño margen)
+                    ws.col(col_idx).width = 256 * (max_length + 2)
+                
+                wb.save(outputi)
+                outputi.seek(0)
 
-                    df = df.reset_index(drop=True)
-                    # Opción B: excluir filas donde se cumple CUALQUIERA de las dos condiciones de fecha
-                    df = df[
-                        (df["Evaluación"] != "Enviar nota de designación") &
-                        ~(
-                            df["Fecha Egreso Cargo"].astype(str).str.contains(pattern, na=False) |
-                            (df["Fecha Egreso Cargo"].astype(str) == "Art. 32")
-                        )
-                    ]
-                    df = borrar_ultimas_columnas(df,5)
-                    df = df.reset_index(drop=True)
-                    df = df.fillna('')
+                nombre_archivo_i = f"{opcion}_oficina_{oficina[0]}_GEDO.xls"
 
+                st.download_button(
+                    label=f"Descargar planilla de la oficina: {oficina[0]}",
+                    data=outputi.getvalue(),
+                    file_name=nombre_archivo_i,
+                    mime="application/vnd.ms-excel"
+                )
 
-                    outputi = io.BytesIO()
+            if len(oficinas_nan) != 0:
 
-                    wb = xlwt.Workbook()
-                    ws = wb.add_sheet("Sheet1")
+                st.divider()
 
-                    # Estilo para fecha
-                    estilo_fecha = xlwt.XFStyle()
-                    estilo_fecha.num_format_str = "DD/MM/YYYY"
+                st.markdown("Estas son las oficinas que no pueden ser procesadas porque faltan completar la fecha de egreso del cargo para algunas evaluaciones. Por favor completar y volver a realizar procedimiento.")
 
-                    # Escribir encabezados
-                    for col_idx, col_name in enumerate(df.columns):
-                        ws.write(0, col_idx, col_name)
+                for oficina_nan in oficinas_nan:
+                    st.write("""-""",oficina_nan)
+            
 
-                    # Columnas H e I → índices 7 y 8
-                    columnas_fecha_idx = [7, 8]
-
-                    # Escribir datos
-                    for row_idx, row in df.iterrows():
-                        for col_idx, value in enumerate(row):
-                            if col_idx in columnas_fecha_idx:
-                                ws.write(row_idx + 1, col_idx, value, estilo_fecha)
-                            else:
-                                ws.write(row_idx + 1, col_idx, value)
-
-                    for col_idx, col_name in enumerate(df.columns):
-                    
-                        # Largo del encabezado
-                        max_length = len(str(col_name))
-                    
-                        # Largo máximo del contenido
-                        for value in df.iloc[:, col_idx]:
-                            if value is not None:
-                                length = len(str(value))
-                                if length > max_length:
-                                    max_length = length
-                    
-                            # Ajuste (256 es unidad de xlwt, +2 da un pequeño margen)
-                        ws.col(col_idx).width = 256 * (max_length + 2)
-                    
-                    wb.save(outputi)
-                    outputi.seek(0)
-
-                    nombre_archivo_i = f"{opcion}_oficina_COMPLETA_GEDO.xls"
-
-                    st.download_button(
-                        label=f"Descargar planilla",
-                        data=outputi.getvalue(),
-                        file_name=nombre_archivo_i,
-                        mime="application/vnd.ms-excel"
-                    )
 
 
 
