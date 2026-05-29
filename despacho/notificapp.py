@@ -70,11 +70,13 @@ def obtener_nombres_y_legajos(file):
                  r"(?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+|" \
                      r"[A-ZÁÉÍÓÚÑ]+(?:[-'´’][A-ZÁÉÍÓÚÑ]+)*))" \
              r"{0,5}" \
-         r")\s*,?\s*" \
-         r"\((?:Legajo|Leg\.?)\s+" \
+         r")"\
+         r"\s*(?:,|-)?\s*" \
+         r"\(?"\
+         r"(?:Legajo|Leg\.?)\s+" \
              r"(?:(?:N°|Nº|No|N\.°|N\.º|Nᵃ|Num\.?)\s*)?" \
              r"(?P<legajo>\d{1,3}(?:\.\d{3})*|\d+)" \
-         r"\)"
+         r"\)?"
 
     coincidencias = re.findall(patron, texto)
 
