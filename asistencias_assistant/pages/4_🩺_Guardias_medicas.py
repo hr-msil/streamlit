@@ -7,65 +7,92 @@ import sys
 root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(root))
 from services.guardiasMedicas import armar_listados
+from services.guardias_medicas import pivotear_guardias_medicas
 
 st.subheader("🩺 Guardias médicas")
 st.divider()
 
-col1, col2 = st.columns(2)
+tab1,tab2 = st.tabs(["Descuentos de bonificaciones", "Cálculo de guardias médicas"])
 
-with col1:
-    st.caption("Listado de novedades")
-    archivo_novedades = st.file_uploader(
-        "", type="xls", accept_multiple_files=False, key="archivo_novedades"
+with tab1:
+    st.subheader("Generar descuentos de bonificaciones para colaboradores del hospital")
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.caption("Listado de novedades")
+        archivo_novedades = st.file_uploader(
+            "Subí el archivo de novedades", type="xls", accept_multiple_files=False, key="archivo_novedades"
+        )
+        st.caption("Listado de ausencias")
+        archivo_ausencias = st.file_uploader(
+            "Subí el archivo de ausencias", type="xls", accept_multiple_files=False, key="archivo_ausencias"
+        )
+
+    with col2:
+        st.caption("Listado de horarios")
+        archivo_horarios = st.file_uploader(
+            "Subí el archivo de horarios", type="xls", accept_multiple_files=False, key="archivo_horarios"
+        )
+        st.caption("Empleados por oficina")
+        archivo_empleados_por_ofi = st.file_uploader(
+            "Subí el archivo de empleados por oficina", type="xls", accept_multiple_files=False, key="archivo_empleados_por_ofi"
+        )
+
+    if archivo_novedades and archivo_horarios and archivo_ausencias and archivo_empleados_por_ofi:
+        st.divider()
+
+        listas, legajos_a_reportar = armar_listados(
+            archivo_novedades, archivo_horarios, archivo_ausencias, archivo_empleados_por_ofi
+        )
+
+        buffers = {}
+
+        for nombre, lista in listas.items():
+            if nombre == "DTO398":
+                df = pd.DataFrame({"legajos": lista[0], "porcentajes": lista[1]})
+            elif nombre == "LEGAJOS SIN HORARIO":
+                legajos_sin_horario = lista
+                continue
+            elif nombre == "CAMBIO_GUARDIA":
+                cambio_de_guardia = lista
+                continue
+            else:
+                df = pd.DataFrame({"legajos": lista})
+
+            buffer = io.StringIO()
+            df.to_csv(buffer, index=False)
+            buffers[nombre] = buffer.getvalue()
+
+        st.caption("Archivos generados")
+        cols = st.columns(len(buffers))
+        for col, (nombre, data) in zip(cols, buffers.items()):
+            with col:
+                st.download_button(
+                    label=nombre,
+                    data=data,
+                    file_name=f"{nombre}.csv",
+                    mime="text/csv",
+                    icon=":material/download:",
+                    use_container_width=True,
+                )
+        for output in legajos_a_reportar:
+            st.info(output)
+
+        st.info("Estos son los legajos que tuvieron ausencias con motivo CAMBIO DE GUARDIA. Por favor, procesar a mano")
+
+        if len(cambio_de_guardia) > 0:
+
+            for legajo in cambio_de_guardia:
+
+                st.write(legajo)
+
+with tab2:
+    st.subheader("Generar archivo excel resumen de las guardias médicas (Versión Alpha)")
+    st.write("Futuras actualizaciones: control de horarios, ausencias, etc. Reportar cualquier error al equipo de datos.")
+
+    archivo = st.file_uploader(
+        "Subí acá el archivo xls", type="xls", accept_multiple_files=False, key="guardias_medicas_xls"
     )
-    st.caption("Listado de ausencias")
-    archivo_ausencias = st.file_uploader(
-        "", type="xls", accept_multiple_files=False, key="archivo_ausencias"
-    )
-
-with col2:
-    st.caption("Listado de horarios")
-    archivo_horarios = st.file_uploader(
-        "", type="xls", accept_multiple_files=False, key="archivo_horarios"
-    )
-    st.caption("Empleados por oficina")
-    archivo_empleados_por_ofi = st.file_uploader(
-        "", type="xls", accept_multiple_files=False, key="archivo_empleados_por_ofi"
-    )
-
-if archivo_novedades and archivo_horarios and archivo_ausencias and archivo_empleados_por_ofi:
-    st.divider()
-
-    listas, legajos_a_reportar = armar_listados(
-        archivo_novedades, archivo_horarios, archivo_ausencias, archivo_empleados_por_ofi
-    )
-
-    buffers = {}
-
-    for nombre, lista in listas.items():
-        if nombre == "DTO398":
-            df = pd.DataFrame({"legajos": lista[0], "porcentajes": lista[1]})
-        elif nombre == "LEGAJOS SIN HORARIO":
-            legajos_sin_horario = lista
-            continue
-        else:
-            df = pd.DataFrame({"legajos": lista})
-
-        buffer = io.StringIO()
-        df.to_csv(buffer, index=False)
-        buffers[nombre] = buffer.getvalue()
-
-    st.caption("Archivos generados")
-    cols = st.columns(len(buffers))
-    for col, (nombre, data) in zip(cols, buffers.items()):
-        with col:
-            st.download_button(
-                label=nombre,
-                data=data,
-                file_name=f"{nombre}.csv",
-                mime="text/csv",
-                icon=":material/download:",
-                use_container_width=True,
-            )
-    for output in legajos_a_reportar:
-        st.info(output)
+    
+    if archivo:
+        pivotear_guardias_medicas(archivo)
