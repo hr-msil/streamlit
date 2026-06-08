@@ -2,8 +2,8 @@ import streamlit as st
 from io import BytesIO
 from theannexapp import armar_anexo_dosV2
 
-st.title('The Annex App versión beta NO UTILIZAR📎')
-
+st.title('The Annex App📎')
+st.write("Ante cualquier error, reportar al equipo de datos.")
 st.write("Seleccioná los archivos que queres procesar")
 
 
