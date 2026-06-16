@@ -228,7 +228,7 @@ def transformar_ausencias_a_dict(ausencias : str) -> dict:
         dias = list(range(int(row["dia_inicio"]), int(row["dia_fin"]) + 1))
 
         #ignoramos los motivos LSGS
-        if(nro_motivo == 40 or nro_motivo == 803):continue
+        if(nro_motivo == 40 or nro_motivo == 803 or nro_motivo == 16):continue
 
         empezo_este_mes = row["clasificacion_mes"]
 
