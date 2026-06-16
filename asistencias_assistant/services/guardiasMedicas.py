@@ -373,7 +373,6 @@ def armar_listados(archivo_novedades: str,archivo_horarios_por_ofi:str, archivo_
     df_horarios_ME = pd.merge(novedades,horarios_guardias[["legajo_limpio", "codigo_horario"]],how='left',left_on=["legajo_limpio"],right_on=["legajo_limpio"])
 
     legajos_descontar_BAP = []
-    cambios_de_guardia = []
     legajos_a_descontar_PG = []
     legajos_ME_quinta_guardia = []
     legajos_sin_horario = []
@@ -407,7 +406,7 @@ def armar_listados(archivo_novedades: str,archivo_horarios_por_ofi:str, archivo_
         'DTO398': [legajos_a_descontar_398,porcentajes_a_descontar],
         'GUARDIA_FERIADO': legajos_ME_feriado,
         'LEGAJOS SIN HORARIO': legajos_sin_horario,
-        'CAMBIO_GUARDIA': cambios_de_guardia
+        'CAMBIO_GUARDIA': legajos_con_cambio_de_guardia
     }
 
     legajos_a_reportar = reportar_legajos_sin_horario(legajos_sin_horario, df_horarios_ME)
