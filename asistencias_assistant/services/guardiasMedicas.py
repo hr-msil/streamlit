@@ -136,7 +136,7 @@ def leer_novedades(novedades_excel:str) -> pd.DataFrame:
 
     return novedades
 
-def leer_horarios(horarios_excel: str) -> pd.DataFrameataFrame:
+def leer_horarios(horarios_excel: str) -> pd.DataFrame:
     '''
     Devuelve los horarios de los medicos que hacen guardia
     '''
