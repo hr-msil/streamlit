@@ -85,7 +85,7 @@ with tab1:
     
             for legajo in cambio_de_guardia:
     
-                st.write(legajo)
+                st.info(legajo)
 
 with tab2:
     st.subheader("Generar archivo excel resumen de las guardias médicas (Versión Alpha)")
