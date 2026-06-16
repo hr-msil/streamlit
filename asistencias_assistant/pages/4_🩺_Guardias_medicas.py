@@ -27,7 +27,7 @@ with tab1:
         archivo_ausencias = st.file_uploader(
             "Subí el archivo de ausencias", type="xls", accept_multiple_files=False, key="archivo_ausencias"
         )
-
+    
     with col2:
         st.caption("Listado de horarios")
         archivo_horarios = st.file_uploader(
@@ -37,16 +37,16 @@ with tab1:
         archivo_empleados_por_ofi = st.file_uploader(
             "Subí el archivo de empleados por oficina", type="xls", accept_multiple_files=False, key="archivo_empleados_por_ofi"
         )
-
+    
     if archivo_novedades and archivo_horarios and archivo_ausencias and archivo_empleados_por_ofi:
         st.divider()
-
+    
         listas, legajos_a_reportar = armar_listados(
             archivo_novedades, archivo_horarios, archivo_ausencias, archivo_empleados_por_ofi
         )
-
+    
         buffers = {}
-
+    
         for nombre, lista in listas.items():
             if nombre == "DTO398":
                 df = pd.DataFrame({"legajos": lista[0], "porcentajes": lista[1]})
@@ -58,11 +58,11 @@ with tab1:
                 continue
             else:
                 df = pd.DataFrame({"legajos": lista})
-
+    
             buffer = io.StringIO()
             df.to_csv(buffer, index=False)
             buffers[nombre] = buffer.getvalue()
-
+    
         st.caption("Archivos generados")
         cols = st.columns(len(buffers))
         for col, (nombre, data) in zip(cols, buffers.items()):
@@ -77,13 +77,14 @@ with tab1:
                 )
         for output in legajos_a_reportar:
             st.info(output)
-
-        st.info("Estos son los legajos que tuvieron ausencias con motivo CAMBIO DE GUARDIA. Por favor, procesar a mano")
-
+    
+    
         if len(cambio_de_guardia) > 0:
-
+            st.info("Estos son los legajos que tuvieron ausencias con motivo CAMBIO DE GUARDIA. Por favor, procesar a mano")
+    
+    
             for legajo in cambio_de_guardia:
-
+    
                 st.write(legajo)
 
 with tab2:
