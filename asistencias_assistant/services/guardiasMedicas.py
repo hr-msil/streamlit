@@ -20,11 +20,16 @@ motivos_no_descontar = ["88 - LICENCIA ANUAL 1ª FRACCION","82 - LICENCIA ANUAL"
 dias_guardias = {700: 'Monday', 699 : 'Tuesday', 701: 'Wednesday', 702: 'Thursday', 703: 'Friday', 704: 'Saturday', 705: 'Sunday'}
 dias_semana = {'Monday': 0, 'Tuesday':1, 'Wednesday': 2, 'Thursday':3, 'Friday':4, 'Saturday':5, 'Sunday':6}
 
-#siempre sacamos el listado con respecto al mes pasado, es por eso que es ese mes elque nos resulta de interés
+
+####DEPLOY####siempre sacamos el listado con respecto al mes pasado, es por eso que es ese mes elque nos resulta de interés
 hoy = datetime.today()
 hoy = hoy.replace(hour=0, minute=0, second=0, microsecond=0)
 
-# Determinar el mes anterior
+####TESTING###
+#hoy = datetime(2026, 4, 15)
+#hoy = hoy.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
 primer_dia_mes_anterior = (hoy.replace(day=1) - timedelta(days=1)).replace(day=1)
 mes_anterior = primer_dia_mes_anterior.month
 anio_anterior = primer_dia_mes_anterior.year
@@ -87,9 +92,8 @@ def cambiar_fechas(df: pd.DataFrame):
     df["dia_fin"] = pd.to_datetime(df["dia_fin"],format="%d/%m/%Y")
 
     # Determinar el mes anterior
-    primer_dia_mes_anterior = (hoy.replace(day=1) - timedelta(days=1)).replace(day=1)
     ultimo_dia_mes_anterior = hoy.replace(day=1) - timedelta(days=1)
-
+    mes_anterior = primer_dia_mes_anterior.month
     # Mes anterior al anterior
     primer_dia_dos_meses = (primer_dia_mes_anterior - timedelta(days=1)).replace(day=1)
     ultimo_dia_dos_meses = primer_dia_mes_anterior - timedelta(days=1)
@@ -123,6 +127,18 @@ def cambiar_fechas(df: pd.DataFrame):
     df["dia_inicio"] = df["dia_inicio"].dt.day
     df["dia_fin"] = df["dia_fin"].dt.day
 
+def dias_trabajados(legajo: str, ausencias: dict) -> int:
+    '''
+    Dado un legajo devuelve cuántos días en el mes ese legajo trabajo. Solo cuenta para aquellos legajos que tienen motivo LSGS (16, 603, 83)
+    '''
+
+    ausencias_leg = ausencias[legajo]
+    ultimo_dia_mes_anterior = hoy.replace(day=1) - timedelta(days=1)
+    ultimo_dia_mes_anterior = int(ultimo_dia_mes_anterior.day)
+    if ausencias_leg["lsgs"] > 0:
+        return ultimo_dia_mes_anterior - ausencias_leg["lsgs"]
+    else:
+        return ultimo_dia_mes_anterior
 #----------- Funciones para leer archivos ---------------
 
 def leer_novedades(novedades_excel:str) -> pd.DataFrame:
@@ -165,7 +181,6 @@ def transformar_ausencias_a_dict(ausencias : str) -> dict:
 
     # Determinar el mes anterior
     primer_dia_mes_anterior = (hoy.replace(day=1) - timedelta(days=1)).replace(day=1)
-
     oficina = None
     empleado = None
     legajo = None
@@ -217,7 +232,7 @@ def transformar_ausencias_a_dict(ausencias : str) -> dict:
     df["nro_motivo"] = df["nro_motivo"].astype(int)
     
 
-    legajo_dict = defaultdict(lambda: {"empleado": None, "dias": [], "motivos": [],"licencia primera frac":0,"dias_escritos":[],"motivo descuenta solo":0,"cambio_de_guardia":0})
+    legajo_dict = defaultdict(lambda: {"empleado": None, "dias": [], "motivos": [],"licencia primera frac":0,"dias_escritos":[],"motivo descuenta solo":0,"cambio_de_guardia":0,"lsgs":0})
     
     for _, row in df.iterrows():
         legajo = str(row["legajo"])
@@ -228,22 +243,27 @@ def transformar_ausencias_a_dict(ausencias : str) -> dict:
         dias = list(range(int(row["dia_inicio"]), int(row["dia_fin"]) + 1))
 
         #ignoramos los motivos LSGS
-        if(nro_motivo == 40 or nro_motivo == 803 or nro_motivo == 16):continue
+        #if(nro_motivo == 40 or nro_motivo == 803 or nro_motivo == 16):continue
 
         empezo_este_mes = row["clasificacion_mes"]
 
         legajo_dict[legajo]["empleado"] = nombre
         legajo_dict[legajo]["oficina"] = oficina
-        
-        legajo_dict[legajo]["dias"].extend(dias)
-        legajo_dict[legajo]["motivos"].extend([f"{nro_motivo} - {motivo}" for _ in range(len(dias))])
-        if motivo in motivos_que_descuenta:
-            legajo_dict[legajo]["motivo descuenta solo"] = 1 if legajo_dict[legajo]["motivo descuenta solo"] == 0 else legajo_dict[legajo]["motivo descuenta solo"]
-        if nro_motivo == 88:
-            if empezo_este_mes == 1:
-                legajo_dict[legajo]["licencia primera frac"] = empezo_este_mes if legajo_dict[legajo]["licencia primera frac"] == 0 else legajo_dict[legajo]["licencia primera frac"]
-        if nro_motivo == 19:
-            legajo_dict[legajo]["cambio_de_guardia"] = 1 if legajo_dict[legajo]["cambio_de_guardia"] == 0 else legajo_dict[legajo]["cambio_de_guardia"]
+
+        if nro_motivo == 40 or nro_motivo == 16 or nro_motivo == 803:
+            legajo_dict[legajo]["lsgs"] += len(dias)
+        else:
+            legajo_dict[legajo]["dias"].extend(dias)
+            legajo_dict[legajo]["motivos"].extend([f"{nro_motivo} - {motivo}" for _ in range(len(dias))])
+
+            if motivo in motivos_que_descuenta:
+                legajo_dict[legajo]["motivo descuenta solo"] = 1 if legajo_dict[legajo]["motivo descuenta solo"] == 0 else legajo_dict[legajo]["motivo descuenta solo"]
+            if nro_motivo == 88:
+                if empezo_este_mes == 1:
+                    legajo_dict[legajo]["licencia primera frac"] = empezo_este_mes
+            if nro_motivo == 19:
+                legajo_dict[legajo]["cambio_de_guardia"] = 1 if legajo_dict[legajo]["cambio_de_guardia"] == 0 else legajo_dict[legajo]["cambio_de_guardia"]
+            
 
     for v in legajo_dict.values():
         v["dias"] = sorted(set(v["dias"]))
@@ -269,17 +289,57 @@ def listadoPorEmpleados(empleados_por_ofi_excel :str) -> pd.DataFrame:
 
 #--------Chequeo de bonificaciones--------
 
-def chequear_BAP_legajo(ausencias: dict, legajo: str, legajos_a_descontar_BAP: list):
+def chequear_BAP_legajo(ausencias: dict, legajo: str, legajos_a_descontar_BAP: list, dias_trabajados_bap: list, dias_trabajados_leg: int):
     '''
     Dado un legajo se fija si tiene como ausencia el motivo: 88 - LICENCIA ANUAL 1ª FRACCION, además, para ser descontada la bonificación se fija que no tenga alguno de los motivos que descuenta solo.
     '''
     if legajo in ausencias.keys():
-        if ausencias[legajo]["licencia primera frac"] == 1:
-            if ausencias[legajo]["motivo descuenta solo"] == 0:
+        cant_motivos_unicos = len(list(set(ausencias[legajo]["motivos"]))) if len(ausencias[legajo]["motivos"]) > 0  else 0
+        if (cant_motivos_unicos > 0):
+
+            if (cant_motivos_unicos == 1) and ("82 - LICENCIA ANUAL" in list(set(ausencias[legajo]["motivos"]))):
+                return
+            if (cant_motivos_unicos >= 0) and (ausencias[legajo]["licencia primera frac"] == 0):
                 legajos_a_descontar_BAP.append(legajo)
+                dias_trabajados_bap.append(dias_trabajados_leg)
+            elif(cant_motivos_unicos > 1) and(ausencias[legajo]["licencia primera frac"] == 1):
+                legajos_a_descontar_BAP.append(legajo)
+                dias_trabajados_bap.append(dias_trabajados_leg)
+            elif ausencias[legajo]["licencia primera frac"] == 1:
+                legajos_a_descontar_BAP.append(legajo)
+                dias_trabajados_bap.append(dias_trabajados_leg)
+
+def chequear_BAP_legajo_v2(ausencias: dict, legajo: str, codigo_horario_leg: str,legajos_a_descontar_BAP: list, dias_trabajados_bap: list, dias_trabajados_leg: int):
+
+    if legajo in ausencias.keys():
+        ausencias_leg = ausencias[legajo]
+        dias_ausencias = ausencias_leg["dias_escritos"]
+        lic_anual_este_anio = ausencias_leg["licencia primera frac"]
+        motivos_leg = ausencias_leg["motivos"]
+        dia_horario_leg = dias_guardias[codigo_horario_leg]
+        descuenta_BAP = False
 
 
-def chequeo_PG_quinta_guardia_legajo(ausencias: dict, cant_dias_en_mes: list, legajo: str, codigo_horario_leg: str, legajos_a_descontar: list,legajosME_que_cobran_quinta_guardia: list):
+        indices = [i for i, x in enumerate(dias_ausencias) if x == dia_horario_leg]
+        #si tiene lic anual 1ra frac en dos meses, se le descuenta el primer mes, el segundo no
+
+        if indices: 
+            #tiene ausencia, las recorro y me fijo que ninguna sea lic. anual primera fracción
+            for idx in indices:
+                if motivos_leg[idx] == "88 - LICENCIA ANUAL 1ª FRACCION" and lic_anual_este_anio == 0:
+                    continue
+                elif motivos_leg[idx] == "82 - LICENCIA ANUAL":
+                    continue
+                else:
+                    descuenta_BAP = True
+
+            if descuenta_BAP:
+                legajos_a_descontar_BAP.append(legajo)
+                dias_trabajados_bap.append(dias_trabajados_leg)
+
+
+def chequeo_PG_quinta_guardia_legajo(ausencias: dict, cant_dias_en_mes: list, legajo: str, codigo_horario_leg: str, 
+                                     legajos_a_descontar: list,legajosME_que_cobran_quinta_guardia: list, dias_trabajados_PG: list, dias_trabajados_leg: int):
 
     if codigo_horario_leg in dias_guardias.keys():
             dia_horario_leg = dias_guardias[codigo_horario_leg]
@@ -295,14 +355,17 @@ def chequeo_PG_quinta_guardia_legajo(ausencias: dict, cant_dias_en_mes: list, le
                             legajosME_que_cobran_quinta_guardia.append(legajo)
                         if cant_faltas_en_guardia > 1:
                             legajos_a_descontar.append(legajo)
+                            dias_trabajados_PG.append(dias_trabajados_leg)
                     if cant_dias_en_mes_horario == 4:
                         if cant_faltas_en_guardia > 0:
                             legajos_a_descontar.append(legajo)
+                            dias_trabajados_PG.append(dias_trabajados_leg)
             else:
                 if cant_dias_en_mes_horario == 5: legajosME_que_cobran_quinta_guardia.append(legajo)
 
 
-def chequeo_decreto_398_y_guardias_feriados_legajo(ausencias:dict, legajo: str, codigo_horario_legajo: str,legajos_a_descontar: list,porcentajes_a_descontar: list,legajosME_que_cobran_feriado: list):
+def chequeo_decreto_398_y_guardias_feriados_legajo(ausencias:dict, legajo: str, codigo_horario_legajo: str,legajos_a_descontar: list,
+                                                   porcentajes_a_descontar: list,legajosME_que_cobran_feriado: list,dias_trabajados_398: list, dias_trabajados_leg: int):
     
     motivos_enfermedad_propia = leer_motivos_enf_propia()
     if codigo_horario_legajo in dias_guardias.keys():
@@ -354,6 +417,7 @@ def chequeo_decreto_398_y_guardias_feriados_legajo(ausencias:dict, legajo: str, 
                 if porcentaje_max > 0:
                     legajos_a_descontar.append(legajo)
                     porcentajes_a_descontar.append(porcentaje_max)
+                    dias_trabajados_398.append(dias_trabajados_leg)
 
         else:
             if hace_guardia_en_feriado == True: legajosME_que_cobran_feriado.append(legajo)
@@ -373,28 +437,33 @@ def armar_listados(archivo_novedades: str,archivo_horarios_por_ofi:str, archivo_
     df_horarios_ME = pd.merge(novedades,horarios_guardias[["legajo_limpio", "codigo_horario"]],how='left',left_on=["legajo_limpio"],right_on=["legajo_limpio"])
 
     legajos_descontar_BAP = []
+    dias_trabajados_BAP = []
     legajos_a_descontar_PG = []
+    dias_trabajados_PG = []
     legajos_ME_quinta_guardia = []
     legajos_sin_horario = []
     legajos_a_descontar_398 = []
+    dias_trabajados_398 = []
     porcentajes_a_descontar = []
     legajos_ME_feriado = []
     legajos_con_cambio_de_guardia = []
-
     for row in df_horarios_ME.itertuples():
+
         legajo = str(row.legajo_limpio)
+        
         codigo_horario_legajo = row.codigo_horario
 
+
         if codigo_horario_legajo in dias_guardias.keys():
-            
+
             if (legajo in ausencias.keys()) and (ausencias[legajo]["cambio_de_guardia"] == 1):
                 legajos_con_cambio_de_guardia.append(legajo)
 
             else:
-
-                chequear_BAP_legajo(ausencias, legajo, legajos_descontar_BAP)
-                chequeo_PG_quinta_guardia_legajo(ausencias, cant_dias_en_mes, legajo, codigo_horario_legajo,legajos_a_descontar_PG, legajos_ME_quinta_guardia)
-                chequeo_decreto_398_y_guardias_feriados_legajo(ausencias, legajo, codigo_horario_legajo, legajos_a_descontar_398, porcentajes_a_descontar, legajos_ME_feriado)
+                dias_trabajados_leg = dias_trabajados(legajo, ausencias) if legajo in ausencias.keys() else int((hoy.replace(day=1) - timedelta(days=1)).day)
+                chequear_BAP_legajo_v2(ausencias, legajo,codigo_horario_legajo,legajos_descontar_BAP, dias_trabajados_BAP, dias_trabajados_leg)
+                chequeo_PG_quinta_guardia_legajo(ausencias, cant_dias_en_mes, legajo, codigo_horario_legajo,legajos_a_descontar_PG, legajos_ME_quinta_guardia, dias_trabajados_PG, dias_trabajados_leg)
+                chequeo_decreto_398_y_guardias_feriados_legajo(ausencias, legajo, codigo_horario_legajo, legajos_a_descontar_398, porcentajes_a_descontar, legajos_ME_feriado, dias_trabajados_398, dias_trabajados_leg)
 
         else:
             legajos_sin_horario.append(legajo)
@@ -428,19 +497,7 @@ def reportar_legajos_sin_horario(legajos:list, df_horarios_ME: pd.DataFrame):
 
 
 
-if __name__ == "__main__":
 
-    novedades = leer_novedades(r"archivos_junio\novedades me.xls")
-    horarios_guardias = leer_horarios(r"archivos_junio\horariosporoficina.xls")
-    ausencias = transformar_ausencias_a_dict(r"archivos_junio\ausencias mili.xls")
-    empleados_por_ofi = listadoPorEmpleados(r"archivos_junio\listemploficina (1).xls")
-    
-
-    cant_dias_en_mes = contar_dias(primer_dia_mes_anterior.year,primer_dia_mes_anterior.month)
-    
-    df_horarios_ME = pd.merge(novedades,horarios_guardias[["legajo_limpio", "codigo_horario"]],how='left',left_on=["legajo_limpio"],right_on=["legajo_limpio"])
-
-    df_horarios_ME.to_excel("horarios_medicos_guardia.xlsx")
 
 
 
