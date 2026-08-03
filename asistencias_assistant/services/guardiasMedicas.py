@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 
-motivos_no_descontar = ["88 - LICENCIA ANUAL 1ª FRACCION","82 - LICENCIA ANUAL","11 - MATERNIDAD (ARTICULO 42°)","56 - ACCIDENTE DE TRABAJO"]
+motivos_no_descontar = ["11 - MATERNIDAD (ARTICULO 42°)","30 - LICENCIA COMPL.-CARRERA MEDICA","56 - ACCIDENTE DE TRABAJO","88 - LICENCIA ANUAL 1ª FRACCION","82 - LICENCIA ANUAL"]
 
 #Estos son los días de guardia con su respectivo código
 dias_guardias = {700: 'Monday', 699 : 'Tuesday', 701: 'Wednesday', 702: 'Thursday', 703: 'Friday', 704: 'Saturday', 705: 'Sunday'}
@@ -139,6 +139,7 @@ def dias_trabajados(legajo: str, ausencias: dict) -> int:
         return ultimo_dia_mes_anterior - ausencias_leg["lsgs"]
     else:
         return ultimo_dia_mes_anterior
+    
 #----------- Funciones para leer archivos ---------------
 
 def leer_novedades(novedades_excel:str) -> pd.DataFrame:
@@ -251,6 +252,7 @@ def transformar_ausencias_a_dict(ausencias : str) -> dict:
         legajo_dict[legajo]["oficina"] = oficina
 
         if nro_motivo == 40 or nro_motivo == 16 or nro_motivo == 803:
+            #se ignoran los motivos de LSGS pero se cuentan los días de trabajo
             legajo_dict[legajo]["lsgs"] += len(dias)
         else:
             legajo_dict[legajo]["dias"].extend(dias)
@@ -330,6 +332,8 @@ def chequear_BAP_legajo_v2(ausencias: dict, legajo: str, codigo_horario_leg: str
                     continue
                 elif motivos_leg[idx] == "82 - LICENCIA ANUAL":
                     continue
+                elif motivos_leg[idx] == "30 - LICENCIA COMPL.-CARRERA MEDICA":
+                    continue
                 else:
                     descuenta_BAP = True
 
@@ -340,7 +344,8 @@ def chequear_BAP_legajo_v2(ausencias: dict, legajo: str, codigo_horario_leg: str
 
 def chequeo_PG_quinta_guardia_legajo(ausencias: dict, cant_dias_en_mes: list, legajo: str, codigo_horario_leg: str, 
                                      legajos_a_descontar: list,legajosME_que_cobran_quinta_guardia: list, dias_trabajados_PG: list, dias_trabajados_leg: int):
-
+    
+    
     if codigo_horario_leg in dias_guardias.keys():
             dia_horario_leg = dias_guardias[codigo_horario_leg]
             dia_horario_leg_num = dias_semana[dia_horario_leg]
@@ -353,7 +358,7 @@ def chequeo_PG_quinta_guardia_legajo(ausencias: dict, cant_dias_en_mes: list, le
                     if cant_dias_en_mes_horario == 5:
                         if cant_faltas_en_guardia == 0:
                             legajosME_que_cobran_quinta_guardia.append(legajo)
-                        if cant_faltas_en_guardia > 1:
+                        if cant_faltas_en_guardia >= 1:
                             legajos_a_descontar.append(legajo)
                             dias_trabajados_PG.append(dias_trabajados_leg)
                     if cant_dias_en_mes_horario == 4:
