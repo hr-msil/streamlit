@@ -20,7 +20,7 @@ import io
 
 
 motivos_sin_accion = ["RESERVA DE CARGO", "LICENCIA S/GOCE DE SUELDO", "RESERVA DE CARGO POR FUNCION CONCEJAL"] # Se ignora la comparación
-motivos_no_desglaseados = ["SUSPENSION",  "JORNADA REDUCIDA SAYEP"] # Si hay diferencias se copia el ultimo valor porque este en la planilla no se desglosa en filas por cantidad de días.
+motivos_no_desglaseados = ["SUSPENSION",  "JORNADA REDUCIDA SAYEP", "EN PROCESO ART. 32 / 70"] # Si hay diferencias se copia el ultimo valor porque este en la planilla no se desglosa en filas por cantidad de días.
 motivo_presentismo = "PRESENTISMO PUNTUALIDAD (PROCESO DESCUEN" # Para este único motivo, solo nos interesa hacer la comparación de izquierda a derecha
 
 def suma_vectores(vec1: list, vec2: list) -> list:
