@@ -10,6 +10,9 @@ from docx.oxml import OxmlElement
 from pdfminer.high_level import extract_text
 import re
 from io import BytesIO
+from docx.shared import Cm
+from docx.enum.table import WD_ROW_HEIGHT_RULE
+
 
 
 
@@ -26,7 +29,7 @@ def escribir_acto_admin(documento, reso, exp):
 
     documento.add_paragraph()
     parrafo_acta = documento.add_paragraph()
-    run_acta = parrafo_acta.add_run(f'Se deja constancia que en el día de la fecha los agentes fueron notificados de la resolución {reso} contenida en el expediente {exp} mediante la cual se _____________________ a los mismos.')
+    run_acta = parrafo_acta.add_run(f'Se deja constancia que en el día de la fecha los agentes fueron notificados de la resolución {reso} contenida en el expediente {exp} mediante la cual se _______________ a los mismos.')
     parrafo_acta.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
 
     parrafo_firma = documento.add_paragraph()
@@ -130,20 +133,25 @@ def armar_hoja(documento,expediente,resolucion,trabajadores):
     
 
     # Tabla
-    tabla = documento.add_table(rows=1, cols=3)
+    tabla = documento.add_table(rows=1, cols=4)
     tabla.style = 'Table Grid'  # Bordes visibles
 
     encabezado = tabla.rows[0].cells
     encabezado[0].text = "LEGAJO"
     encabezado[1].text = "NOMBRE"
-    encabezado[2].text = "FIRMA Y FECHA"
+    encabezado[2].text = "FIRMA"
+    encabezado[3].text = "FECHA"
 
     for legajo, nombre in trabajadores.items():
-        fila = tabla.add_row().cells
+        row = tabla.add_row()
+        fila = row.cells
         fila[0].text = str(legajo)
         fila[1].text = nombre
         fila[2].text = ""  # Vacío para firma y fecha
+        fila[3].text = ""
 
+        row.height = Cm(3)
+        row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
     escribir_acto_admin(documento, expediente, resolucion)
 
     documento.add_page_break()
