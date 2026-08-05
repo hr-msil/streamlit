@@ -4,3 +4,4 @@ python-docx
 pdfminer.six
 openpyxl
 xlrd
+starlette<0.39.0
