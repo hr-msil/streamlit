@@ -1,4 +1,0 @@
-numpy
-pandas
-difflib
-starlette<0.39.0
