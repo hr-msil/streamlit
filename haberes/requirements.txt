@@ -1,0 +1,9 @@
+streamlit
+pandas
+openpyxl
+xlrd==2.0.1
+python-calamine
+numpy
+xlsxwriter
+starlette<0.39.0
+difflib
