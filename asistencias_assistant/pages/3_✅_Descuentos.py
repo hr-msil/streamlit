@@ -6,7 +6,6 @@ import re
 from services.descuentos import leer_excel
 from services.descuentos import armado_df
 from services.descuentos import comparacion
-from services.descuentos import hay_descuentos_vacios
 from services.descuentos import imprimir_diferencias
 from services.descuentos import unir_diccionarios
 from services.descuentos import crear_excel
@@ -16,9 +15,9 @@ st.set_page_config(page_title="Descuentos", page_icon="✅",  layout = 'wide')
 st.markdown("**Versión beta: cualquier cosa rara que encuentres, no dudes en reportarla!**")
 
 st.markdown("Subí la planilla de la dependencia directo del Google Sheets.")
-archivo_izquierda = st.file_uploader("", type = 'xlsx', accept_multiple_files = False, key = "archivo_izquierda")
+archivo_izquierda = st.file_uploader("archivo_izquierda", type = 'xlsx', accept_multiple_files = False, key = "archivo_izquierda")
 st.markdown("Subí la planilla del segundo cálculo de descuentos.")
-archivo_derecha = st.file_uploader("", type = 'xlsx', accept_multiple_files = False, key = "archivo_derecha")
+archivo_derecha = st.file_uploader("archivo_derecha", type = 'xlsx', accept_multiple_files = False, key = "archivo_derecha")
 
 if archivo_derecha and archivo_izquierda:
 
@@ -40,9 +39,7 @@ if archivo_derecha and archivo_izquierda:
 
         diferencias = comparacion(df_limpio_izq,df_limpio_der)
 
-        print("-----DIFERENCIAS--------")
         imprimir_diferencias(diferencias)
-        print("------------------------")
         dict_personas = unir_diccionarios(dic_legajos_izq, dic_legajos_der)
         nombre_dependencia = re.sub(r"\s*\(\d+\)", "", archivo_izquierda.name)
         buffer = io.BytesIO()

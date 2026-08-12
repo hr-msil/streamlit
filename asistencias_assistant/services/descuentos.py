@@ -2,26 +2,31 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 from collections import defaultdict
-import re
 import xlsxwriter as xl 
-import io
 
-# Cuando se habla de df_uno o cant_izq se refiere al primer archivo excel que se extrae del sistema y que cada agrupación debe completar en la columna de 'Se descuenta?'
-# en cambio, cuando hablamos de df_dos o cant_der se refiere al segundo archivo tirado por el  sistema que debe tener todas las correcciones realizada en la primer parte.
-# La idea del programa es hacer un doble chequeo. Primero se baja la planilla de Descuentos del sistema. Aquella planilla se la manda a cada oficina para que cada una de ellas complete la columna de 'Se descuenta?'.
-# El área de asistencia es la encargada de que esos cambios se vean reflejados en el sistema. Luego se vuelve a bajar la planilla del sistema (que el propio sistema tiene sus fallas, y a veces alguns ausencias 
+# Cuando se habla de df_uno o cant_izq se refiere al primer archivo excel que se extrae del sistema y que cada agrupación ya debió haber completado la columna 'Se descuenta?'
+# en cambio, cuando hablamos de df_dos o cant_der se refiere al segundo archivo tirado por el sistema que debería tener todas las correcciones realizada en la primer parte.
+# La idea del programa es hacer un doble chequeo. 
+# 1) Primero se baja la planilla de Descuentos del sistema. Aquella planilla se la manda a cada oficina para que cada una de ellas 
+# complete la columna de 'Se descuenta?' en el sheets compartido.
+# 2) El área de asistencia es la encargada de que esos cambios se vean reflejados en el sistema. 
+# 3) Luego se vuelve a bajar la planilla del sistema (que el propio sistema tiene sus fallas, y a veces alguns ausencias 
 # salen por duplicado). Entonces, para esas dos planillas tenemos que ver que diferencias se encuentran.
 
-# Siempre reportamos de la siguiente manera: si encontramos que la primer planilla filtrada por 'Descontar' y 'Motivo' tiene más faltas en ese motivo que la segunda planilla -> reportamos la primer planilla
-# Si ocurre al revés -> reportamos la segunda planilla.
+# Siempre reportamos de la siguiente manera: 
+# > Si encontramos que la primer planilla filtrada por 'Descontar' y 'Motivo' tiene más faltas en ese motivo que la segunda planilla 
+# -> reportamos la primera planilla
+# > Si ocurre al revés 
+# -> reportamos la segunda planilla.
 
 
 #Motivos que se tratan de forma especial
-
-
-motivos_sin_accion = ["RESERVA DE CARGO", "LICENCIA S/GOCE DE SUELDO", "RESERVA DE CARGO POR FUNCION CONCEJAL"] # Se ignora la comparación
-motivos_no_desglaseados = ["SUSPENSION",  "JORNADA REDUCIDA SAYEP", "EN PROCESO ART. 32 / 70"] # Si hay diferencias se copia el ultimo valor porque este en la planilla no se desglosa en filas por cantidad de días.
-motivo_presentismo = "PRESENTISMO PUNTUALIDAD (PROCESO DESCUEN" # Para este único motivo, solo nos interesa hacer la comparación de izquierda a derecha
+# Se ignora la comparación
+motivos_sin_accion = ["RESERVA DE CARGO", "LICENCIA S/GOCE DE SUELDO", "RESERVA DE CARGO POR FUNCION CONCEJAL"] 
+# Si hay diferencias se copia el ultimo valor porque este en la planilla no se desglosa en filas por cantidad de días.
+motivos_no_desglaseados = ["SUSPENSION",  "JORNADA REDUCIDA SAYEP", "EN PROCESO ART. 32 / 70"]
+# Para este único motivo, solo nos interesa hacer la comparación de izquierda a derecha
+motivo_presentismo = "PRESENTISMO PUNTUALIDAD (PROCESO DESCUEN" 
 
 def suma_vectores(vec1: list, vec2: list) -> list:
     '''
@@ -38,11 +43,8 @@ def leer_excel(nombre_archivo: str, nombre_hoja: str = None) -> pd.DataFrame:
     '''
 
     if nombre_hoja:
-
         df = pd.read_excel(nombre_archivo, sheet_name = nombre_hoja, header= None)
-
-    else: #no hay que especificar nombe de hoja, es unica
-
+    else: #no hay que especificar nombre de hoja, es unica
         df = pd.read_excel(nombre_archivo, header=None)
 
     df = df.iloc[:,:8]
@@ -57,7 +59,6 @@ def tipo_de_fila(valor_columna) -> int:
     * 2 si es un fila con los datos de las personas
     * 3 si es una fila con las ausencias
     '''
-
     if pd.isna(valor_columna):
         return 0 #es una fila_ws en blanco
     elif valor_columna == "Nombre descuento":
@@ -66,13 +67,11 @@ def tipo_de_fila(valor_columna) -> int:
         return 2 #es una fila_ws con los datos de las personas
     else:
         return 3 #es una fila_ws con las ausencias
-    
-
 
 def extraer_legajo_persona(datos_persona: str) -> str:
     """
-    Dados el string de datos de una persona, devuelve el legajo al que corresponde.
-    Con string de datos hablamos del formato: "Oficina: XYZ Legajo: 12345 NroCargo: n Nombre: PEREZ JUAN Partición: -- TipoCargo: XX Categoría: YY"
+    Dados el string de datos_persona, devuelve el legajo al que corresponde.
+    Con string de datos_persona hablamos del formato: "Oficina: XYZ Legajo: 12345 NroCargo: n Nombre: PEREZ JUAN Partición: -- TipoCargo: XX Categoría: YY"
     """
     fila_split = datos_persona.split(":")[2]
     fila_split_dos = fila_split.split(" ")
@@ -83,10 +82,11 @@ def extraer_legajo_persona(datos_persona: str) -> str:
 
 def armado_df(df: pd.DataFrame) -> tuple[dict,pd.DataFrame]:
     '''
+    Ya no se usa en el código, pero queda guardado para el futuro
+
     Dado el dataframe de la planilla crudo, arma un dataframe para cada persona y su motivo de ausencia, 
     además un diccionario legajo -> string con datos de la persona.
     '''
-
     dic_datos_personas = {}
 
     #Para el armado del dataFrame:
@@ -129,17 +129,6 @@ def armado_df(df: pd.DataFrame) -> tuple[dict,pd.DataFrame]:
                            "Días ausencia": dias_ausencia, "Se descuenta?" : se_descuenta,"Observaciones": observaciones,"Finalizada":formulario})
     return dic_datos_personas, df_res
 
-
-#Finalmente NO se usa
-def hay_descuentos_vacios(df : pd.DataFrame) -> bool:
-    '''
-    Devuelve True si hay descuentos vacíos, duh.
-    '''
-
-    #Chequea si a la oficina o agrupación le falta completar algo
-    df_filtrado = df[~df["Nombre descuento"].isin(motivos_sin_accion)]
-    return df_filtrado["Se descuenta?"].isna().any()
-
 def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
     '''
     df_uno es el df de la primera planilla de descuentos con los campos de se_descuenta completados
@@ -147,6 +136,8 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
     El criterio de comparación es sencillo:
     * Para los motivos_sin_accion no se consideran en la comparacion
     * Para los motivos_no_desglaseados y motivo_presentismo comparamos que coincidan en ambas planillas. De no coincidir se guarda el dato en un nuevo diccionario 
+    * Para los otros motivos, nos quedamos con aquel que tenga mayor cantidad de apariciones de las planillas.
+    Para más especificidad consultar la documentación en Docs de "Documentación - Asistencias" > Descuentos
     '''
     # Obtenemos el conjunto de todos los legajos que aparecen en ambos arrays
     legajos_uno = df_uno["Legajo"].unique()
@@ -180,7 +171,6 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
 
             cant_izq = df_uno_mot_leg.shape[0]
             cant_der = df_dos_mot_leg.shape[0]
-            #NOTA: recordar que, para los casos de motivos_no_desglaseados la cantidad izquierda y la cantidad derecha será una
 
             if cant_izq == 0 and cant_der == 0: # Si no existe el motivo para este legajo en ninguna planilla no hago nada
                 continue
@@ -208,8 +198,9 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
 
                 elif cant_der < cant_izq:
                     diferencias[legajo_str][motivo] = [0,0,0,cant_izq]
-    
-    df_na = df_uno[df_uno["Se descuenta?"].isna()].reset_index(drop=True) # Para los casos donde la Oficina NO COMPLETO la columna 'Descontar', los reportamos para que esos casos sean vistos devuelta
+
+    # Para los casos donde la Oficina NO COMPLETO la columna 'Descontar', los reportamos para que esos casos sean vistos devuelta
+    df_na = df_uno[df_uno["Se descuenta?"].isna()].reset_index(drop=True)
     df_na = df_na.fillna(0)
     legajos_na_chequear = df_na["Legajo"].unique()
     
@@ -227,8 +218,10 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
             df_na_mot_leg = df_na_leg[df_na_leg["Nombre descuento"] == motivo].reset_index(drop=True)
             cant_filas = df_na_leg.shape[0]
 
-            vector_en_diferencias = diferencias[legajo_str][motivo] #Es [] si ese legajo no estaba en el diccionario, es un lista con 4 elemntos si ya existe
-            vector_en_diferencias = vector_en_diferencias if len(vector_en_diferencias) > 0 else [0,0,0,0]#Si ya existía el vector, nos quedamos con ese, sino, lo creamos con 4 elementos en 0
+            #Es [] si ese legajo no estaba en el diccionario, es un lista con 4 elemntos si ya existe
+            vector_en_diferencias = diferencias[legajo_str][motivo] 
+            #Si ya existía el vector, nos quedamos con ese, sino, lo creamos con 4 elementos en 0
+            vector_en_diferencias = vector_en_diferencias if len(vector_en_diferencias) > 0 else [0,0,0,0] 
 
             if motivo in motivos_no_desglaseados:
                 valor = df_na_mot_leg["Días ausencia"].iloc[0]
@@ -242,17 +235,12 @@ def comparacion(df_uno:pd.DataFrame, df_dos:pd.DataFrame):
             
             diferencias[legajo_str][motivo] = suma_vectores(nuevo_vector,vector_en_diferencias)
 
-
     return diferencias
-
-motivos_sin_accion = ["RESERVA DE CARGO", "LICENCIA S/GOCE DE SUELDO", "RESERVA DE CARGO POR FUNCION CONCEJAL"] #se ignora la comparación
-motivos_no_desglaseados = ["SUSPENSION",  "JORNADA REDUCIDA SAYEP"] #si hay diferencias se copia la fila_ws
-motivo_presentismo = "PRESENTISMO PUNTUALIDAD (PROCESO DESCUEN" #se hace la comparación solo de izquierda a derecha
 
 # CREAR PLANILLA
 def escribir_datos(ws: xl.worksheet.Worksheet, fila: int, col_inicial: int, datos_persona: str, formato: xl.format.Format):
     '''
-    Escribe para la planilla de la derecha los datos de la persona en la fila indicada.
+    Escribe en ws la fila indicada los datos datos_persona a partir de la col col_inicial con el formato dado.
     '''
     # Escribo datos de persona
     #rango_datos = "A" + str(fila) + ":H" + str(fila)
@@ -260,7 +248,7 @@ def escribir_datos(ws: xl.worksheet.Worksheet, fila: int, col_inicial: int, dato
 
 def escribir_encabezado(ws: xl.worksheet.Worksheet, fila: int, col_inicial: int, encabezados: list[str], formato: xl.format.Format):
     '''
-    Escribe el encabezado para cualquiera de las dos planillas.
+    Escribe el encabezado en la fila y columna inicial indicadas, con el formato dado
     '''
     # Escribo encabezados
     for i in range(col_inicial, len(encabezados) + col_inicial):
@@ -268,7 +256,7 @@ def escribir_encabezado(ws: xl.worksheet.Worksheet, fila: int, col_inicial: int,
 
 def escribir_fila_tabla_original(ws: xl.worksheet.Worksheet, fila: int, datos: pd.Series): 
     '''
-    Escribe los datos de la fila de la tabla original.
+    Escribe en ws la fila indicada los datos de la primera planilla o tabla_original a partir de la col col_inicial con el formato dado.
     '''
     datos = datos.fillna("")
     datos = datos.array
@@ -296,7 +284,6 @@ def unir_diccionarios(d1: defaultdict[str, defaultdict[str, list[str]]], d2: def
     Se espera que d1 y d2 tengan pares claves,valor repetidos. Entonces añadimos a d1, todos los pares clave,valor que no estén de d2
     Como ambos son defaultdict, simplemente añado todo de d2 a d1
     '''
-
     for k, v in d2.items():
         d1[k] = v
     
@@ -326,7 +313,7 @@ def default_to_regular(d: defaultdict[str, defaultdict[str, list[str]]]) -> dict
 def crear_excel(df_original: pd.DataFrame, diferencias: defaultdict[str, defaultdict[str, list[str]]], dict_personas: defaultdict, buffer):
     '''
     Crea el excel final que empleará asistencia para hacer comparaciones entre lo descontado en el primer cálculo y lo que sale del segundo.
-    El criterio queda TO-DO 
+    El criterio está escrito en la documentación en Docs de "Documentación - Asistencias" > Descuentos
     '''
     wb = xl.Workbook(buffer)
     ws = wb.add_worksheet()
@@ -338,27 +325,22 @@ def crear_excel(df_original: pd.DataFrame, diferencias: defaultdict[str, default
 
     fila_ws = 0
     legajo_actual = None
-    motivos_copiar_completo = ["SUSPENSION",  "JORNADA REDUCIDA SAYEP", "PRESENTISMO PUNTUALIDAD (PROCESO DESCUEN"]
+    motivos_copiar_completo = motivos_no_desglaseados + [motivo_presentismo]
 
     df_original = default_to_regular(df_original)
+
     # Como queremos poner una fila vacía entre cada tabla de legajo con sus motivos de descuento
     # vamos a contar cuantos motivos tenemos por legajo y vamos disminuyendo el contador para añadir la fila vacía.
     cant_filas_por_legajo = df_original["Legajo"].value_counts(dropna=True).to_dict()
     cant_filas_legajo_df = 0
     legajo_en_diferencias = None
-    #print("--------Esta es la planilla original-----------")
-    #print(df_original[["Legajo", "Nombre descuento", "Se descuenta?"]])
-    #print("-------------------")
+    
     for index, row in df_original.iterrows():
-        # TO-DO Como no podemos observar los valores del excel tenemos que ir copiando del df original y copiar al mismo tiempo las diferencias
+        # Como no podemos observar los valores del excel tenemos que ir copiando del df original y copiar al mismo tiempo las diferencias
         # todo esto segun corresponda
         motivo = row["Nombre descuento"]
-        #print("----------------------------------")
-        #print(f"Vamos por la iteración {index}")
-        #print(f"Vamos por legajo {row["Legajo"]} y motivo {row["Nombre descuento"]}")
-        #imprimir_diferencias(diferencias)
         if row["Legajo"] != legajo_actual:
-            #print("[i] Actualizamos legajo")
+            
             legajo_actual = row["Legajo"]
             cant_filas_legajo_df = cant_filas_por_legajo[legajo_actual]
             legajo_en_diferencias = legajo_actual in diferencias.keys()
@@ -378,7 +360,6 @@ def crear_excel(df_original: pd.DataFrame, diferencias: defaultdict[str, default
         # si el legajo y motivo del original estan en diferencias
         if legajo_en_diferencias:
             if motivo in diferencias[legajo_actual].keys(): # existe el motivo en el diccionario de diferencias
-                #print("[i] Existe el motivo en diferencias: copiar a ambos lados")
                 escribir_fila_tabla_original(ws,fila_ws,row[encabezados]) # siempre se escribe lo de la izquierda
                 
                 vector_motivo = diferencias[legajo_actual][motivo] 
@@ -399,19 +380,15 @@ def crear_excel(df_original: pd.DataFrame, diferencias: defaultdict[str, default
                 fila_ws += 1
         
             else: # si esta iteracion el legajo y motivo no está en diferencias
-                #print("[i] No existe el motivo en diferencias: escribir fila tabla original")
                 escribir_fila_tabla_original(ws,fila_ws,row[encabezados])
                 cant_filas_legajo_df -= 1
                 fila_ws += 1
         else: 
-            #print("[i] No existe el motivo en diferencias: escribir fila tabla original")
             escribir_fila_tabla_original(ws,fila_ws,row[encabezados])
             cant_filas_legajo_df -= 1
             fila_ws += 1
 
         if cant_filas_legajo_df == 0: # si no tengo mas filas para el legajo_actual del df original, pongo las diferencias que faltan
-            #print("[i] Nos quedamos sin filas legajos df: ver y copiar diferencias restantes sin matcheo")
-            #print(f"Legajo en diferencias {legajo_en_diferencias}")
             if not legajo_en_diferencias: 
                 fila_ws += 1
                 continue
@@ -426,7 +403,28 @@ def crear_excel(df_original: pd.DataFrame, diferencias: defaultdict[str, default
                         fila_ws += 1
                     diferencias[legajo_actual].pop(motivo)
             diferencias.pop(legajo_actual)
-            fila_ws += 1 # Añado fila en blanco
+            fila_ws += 1 # Añado fila en blanco entre personas
+
+    # Si no quedó nada en el df_original pero sí hay algo nuevo no reportado antes en el sistema, añadirlo
+    for legajo, descuentos in diferencias.items():
+        escribir_datos(ws, fila_ws, 9, dict_personas[legajo], formato_encabezado)
+        fila_ws += 1
+        escribir_encabezado(ws, fila_ws, 9, encabezados, formato_encabezado)
+        fila_ws += 1
+        
+        for motivo, vector_motivo in descuentos.items():
+            if motivo is None:
+                continue
+                
+            # Validación de seguridad frente a None
+            if motivos_copiar_completo and motivo in motivos_copiar_completo:
+                escribir_fila_tabla_diferencias(ws, fila_ws, motivo, vector_motivo)
+                fila_ws += 1
+            else:
+                for _ in range(0, vector_motivo[3]):
+                    escribir_fila_tabla_diferencias(ws, fila_ws, motivo, [0, 0, 0, 1])
+                    fila_ws += 1
+        fila_ws += 1 # Añado fila en blanco entre personas
 
     ws.set_column_pixels(0, 0, 340)
     ws.set_column_pixels(1, 5, 102)
