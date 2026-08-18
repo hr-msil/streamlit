@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 
-motivos_no_descontar = ["11 - MATERNIDAD (ARTICULO 42°)","30 - LICENCIA COMPL.-CARRERA MEDICA","56 - ACCIDENTE DE TRABAJO","88 - LICENCIA ANUAL 1ª FRACCION","82 - LICENCIA ANUAL"]
+motivos_no_descontar = ["11 - MATERNIDAD (ARTICULO 42°)","30 - LICENCIA COMPL.","56 - ACCIDENTE DE TRABAJO","88 - LICENCIA ANUAL 1ª FRACCION","82 - LICENCIA ANUAL"]
 
 #Estos son los días de guardia con su respectivo código
 dias_guardias = {700: 'Monday', 699 : 'Tuesday', 701: 'Wednesday', 702: 'Thursday', 703: 'Friday', 704: 'Saturday', 705: 'Sunday'}
@@ -332,7 +332,7 @@ def chequear_BAP_legajo_v2(ausencias: dict, legajo: str, codigo_horario_leg: str
                     continue
                 elif motivos_leg[idx] == "82 - LICENCIA ANUAL":
                     continue
-                elif motivos_leg[idx] == "30 - LICENCIA COMPL.-CARRERA MEDICA":
+                elif motivos_leg[idx] == "30 - LICENCIA COMPL.":
                     continue
                 else:
                     descuenta_BAP = True
@@ -358,7 +358,7 @@ def chequeo_PG_quinta_guardia_legajo(ausencias: dict, cant_dias_en_mes: list, le
                     if cant_dias_en_mes_horario == 5:
                         if cant_faltas_en_guardia == 0:
                             legajosME_que_cobran_quinta_guardia.append(legajo)
-                        if cant_faltas_en_guardia >= 1:
+                        if cant_faltas_en_guardia > 1:
                             legajos_a_descontar.append(legajo)
                             dias_trabajados_PG.append(dias_trabajados_leg)
                     if cant_dias_en_mes_horario == 4:
