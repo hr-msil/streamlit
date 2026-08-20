@@ -1,4 +1,4 @@
-# Toma un archivo, lo convierte a un dataFrame, elimina las ultimas 3 columnas 
+# Toma un archivo, lo convierte a un dataFrame, elimina las ultimas n (parametro que puede ir cambiando) columnas 
 # Y que cada oficina sea un archivo por separado
 
 import pandas as pd
@@ -20,7 +20,6 @@ def borrar_ultimas_columnas(df: pd.DataFrame, n: int) -> pd.DataFrame:
     :param n: Cantidad de últimas columnas a borrar
     :return: Devuelve el dataFrame original sin las últimas n columnas.
     """
-
     
     cant_columnas = df.shape[1]
 
@@ -65,11 +64,9 @@ tipos_datos = {
     'Bonificación':str
 }
 
-
 #############
 ##STREAMLIT##
 #############
-
 
 st.title("📝Mensualizados")
 
@@ -103,7 +100,7 @@ pattern = re.compile(
 )
 
 
-st.subheader("Elegir el área del cuál se está subiendo el archivo:")
+st.subheader("Elegir el área de la cuál se está subiendo el archivo:")
 
 opcion = st.selectbox(
     "Elegir una opción",
@@ -172,58 +169,81 @@ else:
                 oficina = df_oficina["Oficina"].unique()  # Array de valores únicos
                 df_oficina = borrar_ultimas_columnas(df_oficina,5)
                 df_oficina = df_oficina.reset_index(drop=True)
-                df_oficina = df_oficina.fillna('').infer_objects(copy=False)
-
-                outputi = io.BytesIO()
-
-                wb = xlwt.Workbook()
-                ws = wb.add_sheet("Sheet1")
-
-                # Estilo para fecha
-                estilo_fecha = xlwt.XFStyle()
-                estilo_fecha.num_format_str = "DD/MM/YYYY"
-
-                # Escribir encabezados
-                for col_idx, col_name in enumerate(df_oficina.columns):
-                    ws.write(0, col_idx, col_name)
-
-                # Columnas H e I → índices 7 y 8
-                columnas_fecha_idx = [7, 8]
-
-                # Escribir datos
-                for row_idx, row in df_oficina.iterrows():
-                    for col_idx, value in enumerate(row):
-                        if col_idx in columnas_fecha_idx:
-                            ws.write(row_idx + 1, col_idx, value, estilo_fecha)
-                        else:
-                            ws.write(row_idx + 1, col_idx, value)
-
-                for col_idx, col_name in enumerate(df_oficina.columns):
+                with pd.option_context('future.no_silent_downcasting', True):
+                    df_oficina = df_oficina.fillna('').infer_objects(copy=False)
                 
-                    # Largo del encabezado
-                    max_length = len(str(col_name))
-                
-                    # Largo máximo del contenido
-                    for value in df_oficina.iloc[:, col_idx]:
-                        if value is not None:
-                            length = len(str(value))
-                            if length > max_length:
-                                max_length = length
-                
-                        # Ajuste (256 es unidad de xlwt, +2 da un pequeño margen)
-                    ws.col(col_idx).width = 256 * (max_length + 2)
-                
-                wb.save(outputi)
-                outputi.seek(0)
 
-                nombre_archivo_i = f"{opcion}_oficina_{oficina[0]}_GEDO.xls"
+                fechas_distintas = df_oficina["Fecha Egreso Cargo"].unique()
 
-                st.download_button(
-                    label=f"Descargar planilla de la oficina: {oficina[0]}",
-                    data=outputi.getvalue(),
-                    file_name=nombre_archivo_i,
-                    mime="application/vnd.ms-excel"
-                )
+                for fecha in fechas_distintas:
+                    df_oficina_fecha = df_oficina[df_oficina["Fecha Egreso Cargo"] == fecha].reset_index(drop=True)
+                    outputi = io.BytesIO()
+
+                    wb = xlwt.Workbook()
+                    ws = wb.add_sheet("Sheet1")
+
+                    # Estilo para fecha
+                    estilo_fecha = xlwt.XFStyle()
+                    estilo_fecha.num_format_str = "DD/MM/YYYY"
+
+                    # Escribir encabezados
+                    for col_idx, col_name in enumerate(df_oficina_fecha.columns):
+                        ws.write(0, col_idx, col_name)
+
+                    # Columnas H e I → índices 7 y 8
+                    columnas_fecha_idx = [7, 8]
+
+                    # Escribir datos
+                    for row_idx, row in df_oficina_fecha.iterrows():
+                        for col_idx, value in enumerate(row):
+                            if col_idx in columnas_fecha_idx:
+                                ws.write(row_idx + 1, col_idx, value, estilo_fecha)
+                            else:
+                                ws.write(row_idx + 1, col_idx, value)
+
+                    for col_idx, col_name in enumerate(df_oficina_fecha.columns):
+                    
+                        # Largo del encabezado
+                        max_length = len(str(col_name))
+                    
+                        # Largo máximo del contenido
+                        for value in df_oficina_fecha.iloc[:, col_idx]:
+                            if value is not None:
+                                length = len(str(value))
+                                if length > max_length:
+                                    max_length = length
+                    
+                            # Ajuste (256 es unidad de xlwt, +2 da un pequeño margen)
+                        ws.col(col_idx).width = 256 * (max_length + 2)
+
+                    
+                    wb.save(outputi)
+                    outputi.seek(0)
+                    fecha_normalizada = fecha.date().strftime("%d-%m-%Y")
+                    nombre_archivo_i = f"{opcion}_oficina_{oficina[0]}_{fecha_normalizada}_GEDO.xls"
+
+                    if nombre_archivo_i not in st.session_state:
+                        st.session_state[nombre_archivo_i] = False
+
+                    def marcar_como_descargado(nombre_archivo):
+                        st.session_state[nombre_archivo] = True
+
+                    if st.session_state[nombre_archivo_i]:
+                        texto_btn = f"✅ Oficina {oficina[0]} con fecha fin {fecha_normalizada}"
+                        tipo_btn = "secondary"  # Se vuelve un botón gris/transparente
+                    else:
+                        texto_btn = f"⬇️ Oficina {oficina[0]} con fecha fin {fecha_normalizada}"
+                        tipo_btn = "primary"
+
+                    st.download_button(
+                        label=texto_btn,
+                        data=outputi.getvalue(),
+                        file_name=nombre_archivo_i,
+                        type = tipo_btn,
+                        on_click = marcar_como_descargado,
+                        args=(nombre_archivo_i,),
+                        mime = "application/vnd.ms-excel"
+                    )
 
             if len(oficinas_nan) != 0:
 
@@ -233,9 +253,3 @@ else:
 
                 for oficina_nan in oficinas_nan:
                     st.write("""-""",oficina_nan)
-            
-
-
-
-
-    
