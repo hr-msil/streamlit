@@ -6,3 +6,4 @@ python-calamine
 numpy
 xlsxwriter
 starlette<0.39.0
+pypdf
