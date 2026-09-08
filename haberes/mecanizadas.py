@@ -6,9 +6,20 @@ import unicodedata
 
 PATRON = re.compile(r'\b\d{3}\.\d\b')
 
+#PATRON_NOMINAL = re.compile(
+   # r'^\s*(F?\d+/\d+)\s+([A-ZÁÉÍÓÚÑ ]+?)\s+(?:T P|T E|S P|T J|S J|P P|P J|T D|S D|T M|P M|S M)\s+(\d+\.\d+)\s+(.+?)\s+(\d+\.\d+)\s+NETO'
+#)
+
 PATRON_NOMINAL = re.compile(
-    r'^\s*(F?\d+/\d+)\s+([A-ZÁÉÍÓÚÑ ]+?)\s+(?:T P|T E|S P|T J|S J|P P|P J|T D|S D|T M|P M|S M)\s+(\d+\.\d+)\s+(.+?)\s+(\d+\.\d+)\s+NETO'
+    r'^\s*(F?\d+/\d+)\s+'
+    r'([A-ZÁÉÍÓÚÑ ]+?)\s+'
+    r'(T P|T E|S P|T J|S J|P P|P J|T D|S D|T M|P M|S M)\s+'
+    r'(\d+\.\d+)\s+'
+    r'(.+?)\s+'
+    r'(-?\s*\d+\.\d+)\s+NETO'
 )
+
+
 
 PATRON_DATO = re.compile(
     r'(?P<codigo>\d+\.\d+)\s+'
@@ -39,6 +50,19 @@ PATRON_SUPLENCIA = re.compile(
 PATRON_FECHA_SUPLENCIA  = re.compile(
     r'(\d{2}/\d{2}/\d{4})\s+(\d{2}/\d{2}/\d{4})'
 )
+
+DICC_JARDINES = {"ji_jardin_de_infantes_instituto_1197_jardn_municipal_n4_tambor_de_tacua": "JM4",
+                 "ji_jardin_de_infantes_instituto_1198_jardn_municipal_n3_gralsan_martin": "JM3",
+                 "ji_jardin_de_infantes_instituto_1200_jardn_municipal_nro_2": "JM2",
+                 "ji_jardin_de_infantes_instituto_1202_jardn_municipal_n1_rosario_vera_pe": "JM1",
+                 "ji_jardin_de_infantes_instituto_1210_jardn_municipal_n5_stella_maris": "JM5",
+                 "ji_jardin_de_infantes_instituto_1267_jardn_municipal_n6_el_zorzalito": "JM6",
+                 "pp_escuela_primaria_instituto_1335_escuela_municipal_malvinas_argentin": "EMAP",
+                 "ji_jardin_de_infantes_instituto_1814_jardn_municipal_n7_gregoria_matorr": "JM7",
+                 "ee_escuela_especial_instituto_1840_esc_rehabintegperturblengy_aud": "ERIPLA",
+                 "ji_jardin_de_infantes_instituto_2085_jardn_municipal_n8_malvinas_argent": "JM8",
+                 "ji_jardin_de_infantes_instituto_2299_jardn_municipal_n11": "JM11",
+                 "ms_esc_de_educ_secund_instituto_7352_escuela_municipal_malvinas_argentina": "EMAS"}
 
 def normalize_filename(text: str, separator: str = "_") -> str:
     # 1. Decompose unicode characters (e.g., 'é' becomes 'e' + accent)
@@ -79,6 +103,9 @@ def leer_mecanica(nombre_archivo: str = r"C:\Users\mmaurer\Desktop\EMAP - JUNIO.
     categoria = None
     antiguedad = None
     suplencia = None
+    codigo = None
+    descripcion = None
+    importe = None
 
     # Extraer el texto página por página
     for i, page in enumerate(reader.pages):
@@ -140,27 +167,26 @@ def leer_mecanica(nombre_archivo: str = r"C:\Users\mmaurer\Desktop\EMAP - JUNIO.
             match = PATRON.search(linea)
             
             if match:
-                if match.group() == "011.0":
-                    match_2 = PATRON_NOMINAL.search(linea)   
-                    if match_2:
+                #if match.group() == '011.0':
+                match_2 = PATRON_NOMINAL.search(linea)   
+                if match_2:
+                    
+                    identificador = match_2.group(1)
+                    nombre = match_2.group(2).strip()
+                    tipo = match_2.group(3)
+                    codigo = match_2.group(4)
+                    descripcion = match_2.group(5).strip()
+                    importe = match_2.group(6).replace(' ', '')
+                    fila_nombre = contador_global
 
-                        identificador = match_2.group(1)
-                        nombre = match_2.group(2).strip()
-                        codigo = match_2.group(3)
-                        descripcion = match_2.group(4).strip()
-                        importe = match_2.group(5)
-                        fila_nombre = contador_global
+                #else:
 
-    
+                match_dato = PATRON_DATO.search(linea[match.start():])
 
-                else:
-
-                    match_dato = PATRON_DATO.search(linea[match.start():])
-
-                    if match_dato:
-                        codigo = match_dato.group("codigo")
-                        descripcion = match_dato.group("descripcion").strip()
-                        importe = match_dato.group("importe").replace(" ", "")
+                if match_dato and not match_2:
+                    codigo = match_dato.group("codigo")
+                    descripcion = match_dato.group("descripcion").strip()
+                    importe = match_dato.group("importe").replace(" ", "")
 
                 fila = {
                     "DNI": identificador,
@@ -179,7 +205,10 @@ def leer_mecanica(nombre_archivo: str = r"C:\Users\mmaurer\Desktop\EMAP - JUNIO.
     df = pd.DataFrame(filas)
     df_datos = pd.DataFrame(filas_datos_persona)
     df["IMPORTE"] = df["IMPORTE"].astype('float')
-    nombre_archivo_res = normalize_filename(text = f"{tipo_org}_{institucion}", separator = "_") 
+    nombre_archivo_res = normalize_filename(text = f"{tipo_org}_{institucion}", separator = "_")
+    nombre_archivo_res_resumido = DICC_JARDINES[nombre_archivo_res]
+    df.insert(0, 'INSTITUCION', nombre_archivo_res_resumido)
+    df_datos.insert(0, 'INSTITUCION', nombre_archivo_res_resumido) 
 
    
     #with pd.ExcelWriter(f"{tipo_org}_{institucion}.xlsx") as writer:
@@ -187,6 +216,6 @@ def leer_mecanica(nombre_archivo: str = r"C:\Users\mmaurer\Desktop\EMAP - JUNIO.
       #  df_datos.to_excel(writer, sheet_name="DATOS", index=False)
        # print(f'Archivo generado con nombre: {tipo_org}_{institucion}.xlsx')
 
-    return df, df_datos, nombre_archivo_res
+    return df, df_datos, nombre_archivo_res_resumido
 
 
