@@ -13,7 +13,7 @@ PATRON = re.compile(r'\b\d{3}\.\d\b')
 PATRON_NOMINAL = re.compile(
     r'^\s*(F?\d+/\d+)\s+'
     r'([A-ZÁÉÍÓÚÑ ]+?)\s+'
-    r'(T P|T E|S P|T J|S J|P P|P J|T D|S D|T M|P M|S M)\s+'
+    r'(T P|T E|S P|T J|S J|P P|P J|T D|S D|T M|P M|S M|P D)\s+'
     r'(\d+\.\d+)\s+'
     r'(.+?)\s+'
     r'(-?\s*\d+\.\d+)\s+NETO'
