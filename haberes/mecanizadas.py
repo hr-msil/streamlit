@@ -79,7 +79,7 @@ def normalize_filename(text: str, separator: str = "_") -> str:
     return text.strip(separator)
 
 
-def leer_mecanica(nombre_archivo: str = r"C:\Users\mmaurer\Desktop\EMAP - JUNIO.pdf") -> tuple[pd.DataFrame, pd.DataFrame, str]:
+def leer_mecanica(nombre_archivo: str) -> tuple[pd.DataFrame, pd.DataFrame, str]:
     '''
     Función que recibe un archivo PDF e itera linea por linea para extraer todos los datos necesarios a partir de las regex especificadas.
     Devuelve un DataFrame con los agentes y sus respectivos importes y descripciones correspondientes. Además del nombre que va a tener el archivo resultante, correspondiente
