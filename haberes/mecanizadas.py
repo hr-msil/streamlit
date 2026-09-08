@@ -7,7 +7,7 @@ import unicodedata
 PATRON = re.compile(r'\b\d{3}\.\d\b')
 
 #PATRON_NOMINAL = re.compile(
-   # r'^\s*(F?\d+/\d+)\s+([A-ZÁÉÍÓÚÑ ]+?)\s+(?:T P|T E|S P|T J|S J|P P|P J|T D|S D|T M|P M|S M)\s+(\d+\.\d+)\s+(.+?)\s+(\d+\.\d+)\s+NETO'
+   # r'^\s*(F?\d+/\d+)\s+([A-ZÁÉÍÓÚÑ ]+?)\s+(?:T P|T E|S P|T J|S J|P P|P J|T D|S D|T M|P M|S M|P D)\s+(\d+\.\d+)\s+(.+?)\s+(\d+\.\d+)\s+NETO'
 #)
 
 PATRON_NOMINAL = re.compile(
