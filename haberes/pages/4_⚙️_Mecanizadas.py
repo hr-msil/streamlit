@@ -9,21 +9,30 @@ archivos_subidos = st.file_uploader("Seleccionar los archivos de Mecanizadas que
 
 if archivos_subidos:
 
+    dfs = []
+    dfs_datos = []
+    nombres_institucion = []
+
     for i,archivo_subido in enumerate(archivos_subidos):
 
         df, df_datos, nombre_archivo_res = leer_mecanica(nombre_archivo = archivo_subido)
 
-        output = io.BytesIO()
-        with pd.ExcelWriter(output) as writer:
-            df.to_excel(writer, sheet_name="IMPORTES", index=False)
-            df_datos.to_excel(writer, sheet_name="DATOS", index=False)
+        dfs.append(df)
+        dfs_datos.append(df_datos)
+        
+    df_global = pd.concat(dfs)
+    df_datos_global = pd.concat(dfs_datos)
+    output = io.BytesIO()
+    with pd.ExcelWriter(output) as writer:
+        df_global.to_excel(writer, sheet_name="IMPORTES", index=False)
+        df_datos_global.to_excel(writer, sheet_name="DATOS", index=False)
 
-        excel_procesado = output.getvalue()
+    excel_procesado = output.getvalue()
 
-        st.download_button(
-            label = f"Descargar Mecanizada: {nombre_archivo_res}",
-            data = excel_procesado,
-            file_name= f"{nombre_archivo_res}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key=f"descarga_{nombre_archivo_res}_{i}"
-        )
+    st.download_button(
+        label = f"Descargar Mecanizada global",
+        data = excel_procesado,
+        file_name= f"mecanizada.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key=f"descarga_mecanizada"
+    )
