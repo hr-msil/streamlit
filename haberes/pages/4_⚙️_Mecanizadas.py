@@ -11,19 +11,23 @@ if archivos_subidos:
 
     dfs = []
     dfs_datos = []
+    dfs_consolidado = []
     nombres_institucion = []
 
     for i,archivo_subido in enumerate(archivos_subidos):
 
-        df, df_datos, nombre_archivo_res = leer_mecanica(nombre_archivo = archivo_subido)
+        df, df_datos, df_consolidado,nombre_archivo_res = leer_mecanica(nombre_archivo = archivo_subido)
 
         dfs.append(df)
         dfs_datos.append(df_datos)
+        dfs_consolidado.append(df_consolidado)
         
     df_global = pd.concat(dfs)
     df_datos_global = pd.concat(dfs_datos)
+    df_consolidado_global = pd.concat(dfs_consolidado)
     output = io.BytesIO()
     with pd.ExcelWriter(output) as writer:
+        df_consolidado_global.to_excel(writer, sheet_name = "CONSOLIDADO", index = False)
         df_global.to_excel(writer, sheet_name="IMPORTES", index=False)
         df_datos_global.to_excel(writer, sheet_name="DATOS", index=False)
 
