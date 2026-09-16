@@ -20,7 +20,6 @@ PATRON_NOMINAL = re.compile(
 )
 
 
-
 PATRON_DATO = re.compile(
     r'(?P<codigo>\d+\.\d+)\s+'
     r'(?P<descripcion>.*?)\s+'
@@ -187,12 +186,14 @@ def leer_mecanica(nombre_archivo: str) -> tuple[pd.DataFrame, pd.DataFrame, str]
                     codigo = match_dato.group("codigo")
                     descripcion = match_dato.group("descripcion").strip()
                     importe = match_dato.group("importe").replace(" ", "")
-
+                dni = identificador.split("/")[0]
+                cargo = identificador.split("/")[1]
                 fila = {
-                    "DNI": identificador,
+                    "DNI": dni,
+                    "CARGO": cargo,
                     "NOMBRE": nombre,
                     "CODIGO": codigo,
-                    "DESCIPCION": descripcion,
+                    "DESCRIPCION": descripcion,
                     "IMPORTE": importe,
 
                 }
@@ -208,14 +209,20 @@ def leer_mecanica(nombre_archivo: str) -> tuple[pd.DataFrame, pd.DataFrame, str]
     nombre_archivo_res = normalize_filename(text = f"{tipo_org}_{institucion}", separator = "_")
     nombre_archivo_res_resumido = DICC_JARDINES[nombre_archivo_res]
     df.insert(0, 'INSTITUCION', nombre_archivo_res_resumido)
-    df_datos.insert(0, 'INSTITUCION', nombre_archivo_res_resumido) 
+    df_datos.insert(0, 'INSTITUCION', nombre_archivo_res_resumido)
+    df_consolidado = (
+        df.groupby(["DNI", "CODIGO"], as_index=False)
+        .agg(DESCRIPCION=("DESCRIPCION", "first"),
+             INSTITUCION = ("INSTITUCION", "first"),
+            IMPORTE=("IMPORTE", "sum"))
+    )
 
-   
+ 
     #with pd.ExcelWriter(f"{tipo_org}_{institucion}.xlsx") as writer:
      #   df.to_excel(writer, sheet_name="IMPORTES", index=False)
       #  df_datos.to_excel(writer, sheet_name="DATOS", index=False)
        # print(f'Archivo generado con nombre: {tipo_org}_{institucion}.xlsx')
 
-    return df, df_datos, nombre_archivo_res_resumido
+    return df, df_datos, df_consolidado,nombre_archivo_res_resumido
 
 
