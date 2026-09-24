@@ -11,23 +11,33 @@ if archivos_subidos:
 
     dfs = []
     dfs_datos = []
+    dfs_consolidado_insituciones = []
     dfs_consolidado = []
     nombres_institucion = []
 
     for i,archivo_subido in enumerate(archivos_subidos):
 
-        df, df_datos, df_consolidado,nombre_archivo_res = leer_mecanica(nombre_archivo = archivo_subido)
+        df, df_datos, df_consolidado_insituciones, nombre_archivo_res = leer_mecanica(nombre_archivo = archivo_subido)
 
         dfs.append(df)
         dfs_datos.append(df_datos)
-        dfs_consolidado.append(df_consolidado)
+        dfs_consolidado_insituciones.append(df_consolidado_insituciones)
+        
         
     df_global = pd.concat(dfs)
     df_datos_global = pd.concat(dfs_datos)
-    df_consolidado_global = pd.concat(dfs_consolidado)
+    df_consolidado_intituciones_global = pd.concat(dfs_consolidado_insituciones)
+
+    df_consolidado_global = (
+            df_consolidado_intituciones_global.groupby(["DNI","NOMBRE", "CODIGO","DESCRIPCION"], as_index=False)
+            .agg(
+                IMPORTE=("IMPORTE", "sum"))
+        )
+
     output = io.BytesIO()
     with pd.ExcelWriter(output) as writer:
         df_consolidado_global.to_excel(writer, sheet_name = "CONSOLIDADO", index = False)
+        df_consolidado_intituciones_global.to_excel(writer, sheet_name = "CONSOLIDADO_INSTITUCIONES", index = False) 
         df_global.to_excel(writer, sheet_name="IMPORTES", index=False)
         df_datos_global.to_excel(writer, sheet_name="DATOS", index=False)
 
