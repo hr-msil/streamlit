@@ -211,12 +211,11 @@ def leer_mecanica(nombre_archivo: str) -> tuple[pd.DataFrame, pd.DataFrame, str]
     df.insert(0, 'INSTITUCION', nombre_archivo_res_resumido)
     df_datos.insert(0, 'INSTITUCION', nombre_archivo_res_resumido)
     df_consolidado = (
-        df.groupby(["DNI","NOMBRE", "CODIGO"], as_index=False)
-        .agg(DESCRIPCION=("DESCRIPCION", "first"),
-             INSTITUCION = ("INSTITUCION", "first"),
+        df.groupby(["DNI","NOMBRE", "CODIGO","DESCRIPCION","INSTITUCION"], as_index=False)
+        .agg(
             IMPORTE=("IMPORTE", "sum"))
     )
-
+    
     df_consolidado = df_consolidado[["INSTITUCION", "DNI", "NOMBRE", "CODIGO", "DESCRIPCION", "IMPORTE"]]
 
  
