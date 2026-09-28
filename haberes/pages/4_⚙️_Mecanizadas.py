@@ -34,10 +34,18 @@ if archivos_subidos:
                 IMPORTE=("IMPORTE", "sum"))
         )
 
+    df_consolidado_por_institucion = (
+        df_global.groupby(["INSTITUCION","CODIGO", "DESCRIPCION"], as_index = False)
+        .agg(
+            IMPORTE = ("IMPORTE", "sum")
+        )
+    )
+
     output = io.BytesIO()
     with pd.ExcelWriter(output) as writer:
         df_consolidado_global.to_excel(writer, sheet_name = "CONSOLIDADO", index = False)
-        df_consolidado_intituciones_global.to_excel(writer, sheet_name = "CONSOLIDADO_INSTITUCIONES", index = False) 
+        df_consolidado_intituciones_global.to_excel(writer, sheet_name = "CONSOLIDADO_INST_PERSONAS", index = False)
+        df_consolidado_por_institucion.to_excel(writer, sheet_name = "CONSOLIDADO_POR_INST", index = False) 
         df_global.to_excel(writer, sheet_name="IMPORTES", index=False)
         df_datos_global.to_excel(writer, sheet_name="DATOS", index=False)
 
