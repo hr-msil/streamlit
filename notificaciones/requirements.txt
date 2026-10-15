@@ -1,0 +1,10 @@
+streamlit
+gspread
+google-auth
+google-api-python-client
+pdfplumber
+python-docx
+pdfminer.six
+pypdf
+pandas
+openpyxl
