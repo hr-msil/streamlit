@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 
-motivos_no_descontar = ["11 - MATERNIDAD (ARTICULO 42°)","30 - LICENCIA COMPL.","56 - ACCIDENTE DE TRABAJO","88 - LICENCIA ANUAL 1ª FRACCION","82 - LICENCIA ANUAL","122 - ART. 62 NACIMIENTO PERSONAL MASCULINO"]
+motivos_no_descontar = ["11 - MATERNIDAD (ARTICULO 42°)","30 - LICENCIA COMPL.","56 - ACCIDENTE DE TRABAJO","88 - LICENCIA ANUAL 1ª FRACCION","82 - LICENCIA ANUAL"]
 
 #Estos son los días de guardia con su respectivo código
 dias_guardias = {700: 'Monday', 699 : 'Tuesday', 701: 'Wednesday', 702: 'Thursday', 703: 'Friday', 704: 'Saturday', 705: 'Sunday'}
