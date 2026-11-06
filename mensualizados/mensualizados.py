@@ -7,10 +7,17 @@ import streamlit as st
 import io
 from openpyxl import load_workbook
 from openpyxl.styles import numbers
-import xlwt
 import re
+from openpyxl.utils import get_column_letter
+
 
 #---------- Funciones principales -----------
+
+FORMATOS = {
+    'Fecha Ingreso Cargo': 'd/m/yyyy',
+    'Fecha Egreso Cargo': 'd/m/yyyy',
+    'Bonificación': 'str'
+}
 
 def borrar_ultimas_columnas(df: pd.DataFrame, n: int) -> pd.DataFrame:
     """
@@ -60,6 +67,7 @@ def dividir_oficinas(df: pd.DataFrame) -> tuple[list[pd.DataFrame], list[str]]:
 
     return df_oficinas,oficinas_nan
 
+
 tipos_datos = {
     'Bonificación':str
 }
@@ -98,7 +106,6 @@ pattern = re.compile(
     r"\bno\s+(?:se\s+)?ren(?:ov|uev|ueb)\w*\b",
     re.IGNORECASE
 )
-
 
 st.subheader("Elegir el área de la cuál se está subiendo el archivo:")
 
@@ -151,11 +158,8 @@ else:
 
             df_oficinas,oficinas_nan = dividir_oficinas(df)
 
-            
-
             for df_oficina in df_oficinas:
-                
-
+    
                 df_oficina = df_oficina.reset_index(drop=True)
                 # Opción B: excluir filas donde se cumple CUALQUIERA de las dos condiciones de fecha
                 df_oficina = df_oficina[
@@ -172,55 +176,70 @@ else:
                 with pd.option_context('future.no_silent_downcasting', True):
                     df_oficina = df_oficina.fillna('').infer_objects(copy=False)
                 
-
                 fechas_distintas = df_oficina["Fecha Egreso Cargo"].unique()
-
                 for fecha in fechas_distintas:
-                    df_oficina_fecha = df_oficina[df_oficina["Fecha Egreso Cargo"] == fecha].reset_index(drop=True)
+
+                    df_oficina_fecha = df_oficina[
+                        df_oficina["Fecha Egreso Cargo"] == fecha
+                    ].reset_index(drop=True)
+
                     outputi = io.BytesIO()
 
-                    wb = xlwt.Workbook()
-                    ws = wb.add_sheet("Sheet1")
+                    with pd.ExcelWriter(outputi, engine='openpyxl') as writer:
 
-                    # Estilo para fecha
-                    estilo_fecha = xlwt.XFStyle()
-                    estilo_fecha.num_format_str = "DD/MM/YYYY"
+                        df_oficina_fecha.to_excel(
+                            writer,
+                            index=False,
+                            sheet_name='Sheet1'
+                        )
 
-                    # Escribir encabezados
-                    for col_idx, col_name in enumerate(df_oficina_fecha.columns):
-                        ws.write(0, col_idx, col_name)
+                        ws = writer.sheets['Sheet1']
 
-                    # Columnas H e I → índices 7 y 8
-                    columnas_fecha_idx = [7, 8]
+                        # Aplicar formatos
+                        for columna, formato in FORMATOS.items():
 
-                    # Escribir datos
-                    for row_idx, row in df_oficina_fecha.iterrows():
-                        for col_idx, value in enumerate(row):
-                            if col_idx in columnas_fecha_idx:
-                                ws.write(row_idx + 1, col_idx, value, estilo_fecha)
-                            else:
-                                ws.write(row_idx + 1, col_idx, value)
+                            if columna in df_oficina_fecha.columns:
 
-                    for col_idx, col_name in enumerate(df_oficina_fecha.columns):
+                                col_idx = df_oficina_fecha.columns.get_loc(columna) + 1
+
+                                for fila in range(2, len(df_oficina_fecha) + 2):
+                                    ws.cell(
+                                        row=fila,
+                                        column=col_idx
+                                    ).number_format = formato
+
+                        # Ajustar ancho de columnas
+                        for col_idx, col_name in enumerate(df_oficina_fecha.columns):
+
+                            max_length = len(str(col_name))
+
+                            for value in df_oficina_fecha.iloc[:, col_idx]:
+
+                                if pd.notna(value):
+                                    max_length = max(max_length, len(str(value)))
+
+                            ws.column_dimensions[
+                                get_column_letter(col_idx + 1)
+                            ].width = max_length + 2
+
                     
-                        # Largo del encabezado
-                        max_length = len(str(col_name))
-                    
-                        # Largo máximo del contenido
-                        for value in df_oficina_fecha.iloc[:, col_idx]:
-                            if value is not None:
-                                length = len(str(value))
-                                if length > max_length:
-                                    max_length = length
-                    
-                            # Ajuste (256 es unidad de xlwt, +2 da un pequeño margen)
-                        ws.col(col_idx).width = 256 * (max_length + 2)
+                    excel_bytes = outputi.getvalue()
 
-                    
-                    wb.save(outputi)
-                    outputi.seek(0)
-                    fecha_normalizada = fecha.date().strftime("%d-%m-%Y")
-                    nombre_archivo_i = f"{opcion}_oficina_{oficina[0]}_{fecha_normalizada}_GEDO.xls"
+                    # Verificar que sea un Excel válido
+                    from openpyxl import load_workbook
+
+                    test = load_workbook(io.BytesIO(excel_bytes))
+
+                    print(f"Archivo válido: {nombre_archivo_i if 'nombre_archivo_i' in locals() else 'Pendiente'}")
+                    print(f"Tamaño: {len(excel_bytes)} bytes")
+
+                    # Nombre del archivo
+                    fecha_normalizada = fecha.strftime("%d-%m-%Y")
+
+                    nombre_archivo_i = (
+                        f"{opcion}_oficina_{oficina[0]}_"
+                        f"{fecha_normalizada}_GDSI.xlsx"
+                    )
 
                     if nombre_archivo_i not in st.session_state:
                         st.session_state[nombre_archivo_i] = False
@@ -230,19 +249,19 @@ else:
 
                     if st.session_state[nombre_archivo_i]:
                         texto_btn = f"✅ Oficina {oficina[0]} con fecha fin {fecha_normalizada}"
-                        tipo_btn = "secondary"  # Se vuelve un botón gris/transparente
+                        tipo_btn = "secondary"
                     else:
                         texto_btn = f"⬇️ Oficina {oficina[0]} con fecha fin {fecha_normalizada}"
                         tipo_btn = "primary"
 
                     st.download_button(
                         label=texto_btn,
-                        data=outputi.getvalue(),
+                        data=excel_bytes,
                         file_name=nombre_archivo_i,
-                        type = tipo_btn,
-                        on_click = marcar_como_descargado,
+                        type=tipo_btn,
+                        on_click=marcar_como_descargado,
                         args=(nombre_archivo_i,),
-                        mime = "application/vnd.ms-excel"
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                     )
 
             if len(oficinas_nan) != 0:
