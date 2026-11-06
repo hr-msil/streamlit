@@ -171,7 +171,7 @@ else:
                 ]
                 if df_oficina.shape[0] == 0: continue
                 oficina = df_oficina["Oficina"].unique()  # Array de valores únicos
-                df_oficina = borrar_ultimas_columnas(df_oficina,5)
+                df_oficina = borrar_ultimas_columnas(df_oficina,7)
                 df_oficina = df_oficina.reset_index(drop=True)
                 with pd.option_context('future.no_silent_downcasting', True):
                     df_oficina = df_oficina.fillna('').infer_objects(copy=False)
